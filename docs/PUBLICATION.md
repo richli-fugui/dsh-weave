@@ -1,0 +1,7 @@
+# 公开仓库与隐私
+
+用户于 2026-10-24 明确授权上传至 [dsh-weave](https://github.com/richli-fugui/dsh-weave)。显示名与现有 dsh-table 包名暂不迁移。原工作区保留本机交接和私有证据；公开提交使用 `node scripts/export-public.mjs` 生成的 `.public-export` 独立 checkout，不直接提交原工作区。
+
+导出仅允许源码、测试、脚本、规格和 Markdown 文档，移除文档中的本机用户路径、邮箱和真实会话 ID，并对秘密模式失败关闭。所有原始 evidence、截图、数据库、Agent 记忆、配置、构建物均不导出。PUBLIC_MANIFEST.json 记录每个公开文件 SHA-256；导出后必须检查完整 Git 索引与历史，不能只相信 .gitignore 或扫描器。扫描器不能识别一切秘密，人工检查仍是发布流程的一部分。
+
+公开历史记录中的 evidence 链接指向本机保留的私有材料，不提供原始文件；当前验证摘要和限制见 handoff/03-STATE.md。新增文件应先确认是否适合公开；禁止在公开 checkout 中复制真实 profile、环境文件或任务库。提交使用项目中立身份，不读取个人 Git 身份。

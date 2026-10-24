@@ -1,0 +1,8046 @@
+{
+  "schemaVersion": "1.0",
+  "catalogVersion": "0.2-draft",
+  "createdAt": "2026-10-23",
+  "status": "SPECIFICATION_ONLY",
+  "runtimeExecuted": false,
+  "requiredCaseCount": 144,
+  "scope": "工作台主助理、任务卡、Windows执行与Mac客户端；不是现有产品测试结果",
+  "actionProtocol": {
+    "allowedOperations": [
+      "fixture.prepare",
+      "ui.act",
+      "fault.inject",
+      "user.say",
+      "system.observe"
+    ],
+    "unknownOperationPolicy": "FAIL_NOT_IMPLEMENTED",
+    "fixtureVariantPolicy": "Every variantId needs an explicit implemented setup; no generic success fallback",
+    "oraclePolicy": "Invariant IDs require independent assertions implemented in the driver; narrative alone is not executable",
+    "languagePolicy": "Chinese utterances are live-model scenario inputs at L2; deterministic L1 uses explicit normalized intents and never claims to validate semantic understanding"
+  },
+  "invariants": [
+    {
+      "id": "INV01",
+      "description": "操作始终绑定正确host/profile/project/task/workIntent，不按标题猜身份"
+    },
+    {
+      "id": "INV02",
+      "description": "Windows为唯一权威；已持久记录可恢复，Client缓存不是事实源"
+    },
+    {
+      "id": "INV03",
+      "description": "相同请求幂等；未知受理结果对账，不能重复外部副作用"
+    },
+    {
+      "id": "INV04",
+      "description": "执行前已有可追溯工作归属；自然表达不要求先手动选卡"
+    },
+    {
+      "id": "INV05",
+      "description": "UI、回执与实际状态一致；received/idle/HTTP200不能冒充执行完成"
+    },
+    {
+      "id": "INV06",
+      "description": "Stop持久化后匹配scope的新派发受到epoch门禁"
+    },
+    {
+      "id": "INV07",
+      "description": "取消覆盖应覆盖的子孙/job并使用正确owner，不伤及无关工作"
+    },
+    {
+      "id": "INV08",
+      "description": "控制ACK不等于停止终态；未收敛或不可达显示stopping/unknown"
+    },
+    {
+      "id": "INV09",
+      "description": "停止不撤销已提交外部动作，不删除既有成果"
+    },
+    {
+      "id": "INV10",
+      "description": "审批/提问关联同一事件；停止后旧答复不能启动动作"
+    },
+    {
+      "id": "INV11",
+      "description": "项目文件/工具权限与实际执行位置正确，避免跨项目误写"
+    },
+    {
+      "id": "INV12",
+      "description": "上下文预算有界、来源可查，不注入全部项目原文"
+    },
+    {
+      "id": "INV13",
+      "description": "主Session换代不丢pending输入、控制意图或结果Outbox"
+    },
+    {
+      "id": "INV14",
+      "description": "重连通过快照/日志追赶，丢重乱序不会损坏状态"
+    },
+    {
+      "id": "INV15",
+      "description": "任务完成由验收规则/用户决定，不能直接相信worker建议done"
+    },
+    {
+      "id": "INV16",
+      "description": "结论具备独立可定位证据，模型自述不作唯一oracle"
+    },
+    {
+      "id": "INV17",
+      "description": "自然语言否定、引用、纠正不误触发控制"
+    },
+    {
+      "id": "INV18",
+      "description": "主助理idle时仍有可见后台控制；普通聊天可继续"
+    },
+    {
+      "id": "INV19",
+      "description": "秘密、私人记录与真实业务数据不进入公开报告/前端凭据状态"
+    },
+    {
+      "id": "INV20",
+      "description": "数据库/导入/迁移/备份一致，失败不丢原始数据"
+    },
+    {
+      "id": "INV21",
+      "description": "资源、缓存、队列有界并可清理"
+    },
+    {
+      "id": "INV22",
+      "description": "性能测量分离模型/网络/程序耗时，不用未校准跨机墙钟"
+    },
+    {
+      "id": "INV23",
+      "description": "非代码办公交付可完成并按内容标准验证，不强行Git化"
+    },
+    {
+      "id": "INV24",
+      "description": "PLANNED/MOCK/BLOCKED不可计为真实端到端PASS"
+    },
+    {
+      "id": "INV25",
+      "description": "增量维护任务与概览，不每次全盘扫描或逐卡多层确认"
+    },
+    {
+      "id": "INV26",
+      "description": "后台所有受理工作有登记与恢复说明，不因主回合结束失联"
+    }
+  ],
+  "groups": [
+    {
+      "id": "INTENT",
+      "title": "自然输入与工作归属",
+      "fixtureId": "two-projects",
+      "caseCount": 12,
+      "requiredLevels": [
+        "L1",
+        "L2"
+      ]
+    },
+    {
+      "id": "CARD",
+      "title": "任务主动维护与推荐",
+      "fixtureId": "task-ledger",
+      "caseCount": 10,
+      "requiredLevels": [
+        "L1",
+        "L2"
+      ]
+    },
+    {
+      "id": "SCHED",
+      "title": "调度与任务队列",
+      "fixtureId": "queued-batch",
+      "caseCount": 10,
+      "requiredLevels": [
+        "L1",
+        "L2"
+      ]
+    },
+    {
+      "id": "STOP",
+      "title": "停止暂停恢复与竞态",
+      "fixtureId": "running-tree",
+      "caseCount": 24,
+      "requiredLevels": [
+        "L1",
+        "L2",
+        "L3"
+      ]
+    },
+    {
+      "id": "APPROVAL",
+      "title": "审批提问与用户决定",
+      "fixtureId": "approval-pending",
+      "caseCount": 10,
+      "requiredLevels": [
+        "L1",
+        "L2"
+      ]
+    },
+    {
+      "id": "CONTEXT",
+      "title": "主入口记忆与会话轮换",
+      "fixtureId": "memory-pressure",
+      "caseCount": 10,
+      "requiredLevels": [
+        "L1",
+        "L2"
+      ]
+    },
+    {
+      "id": "NETWORK",
+      "title": "远程连接与多端一致",
+      "fixtureId": "remote-online",
+      "caseCount": 10,
+      "requiredLevels": [
+        "L1",
+        "L2",
+        "L3"
+      ]
+    },
+    {
+      "id": "RECOVERY",
+      "title": "崩溃与持久化窗口",
+      "fixtureId": "crash-cutpoint",
+      "caseCount": 10,
+      "requiredLevels": [
+        "L1",
+        "L2"
+      ]
+    },
+    {
+      "id": "DATA",
+      "title": "导入路径与项目资料",
+      "fixtureId": "old-card-import",
+      "caseCount": 10,
+      "requiredLevels": [
+        "L1",
+        "L2"
+      ]
+    },
+    {
+      "id": "OFFICE",
+      "title": "个人与办公助理真实故事",
+      "fixtureId": "office-deliverables",
+      "caseCount": 12,
+      "requiredLevels": [
+        "L1",
+        "L2",
+        "L3"
+      ]
+    },
+    {
+      "id": "UX",
+      "title": "交互可理解性与语音输入",
+      "fixtureId": "desktop-frontstage",
+      "caseCount": 8,
+      "requiredLevels": [
+        "L1",
+        "L3",
+        "L4"
+      ]
+    },
+    {
+      "id": "SECURITY",
+      "title": "权限与证据保护",
+      "fixtureId": "security-boundaries",
+      "caseCount": 6,
+      "requiredLevels": [
+        "L1",
+        "L2"
+      ]
+    },
+    {
+      "id": "PERF",
+      "title": "延迟背压与Token成本",
+      "fixtureId": "performance-fixture",
+      "caseCount": 6,
+      "requiredLevels": [
+        "L1",
+        "L2",
+        "L3"
+      ]
+    },
+    {
+      "id": "RELEASE",
+      "title": "打包部署与报告诚信",
+      "fixtureId": "install-existing-profile",
+      "caseCount": 6,
+      "requiredLevels": [
+        "L1",
+        "L2",
+        "L3"
+      ]
+    }
+  ],
+  "cases": [
+    {
+      "id": "INTENT-001",
+      "area": "INTENT",
+      "title": "直接继续项目",
+      "priority": "P0",
+      "status": "PLANNED",
+      "implementationRequired": true,
+      "given": {
+        "fixtureId": "two-projects",
+        "variantId": "INTENT-001",
+        "premise": "P_A已有未完成T_A，未拖卡"
+      },
+      "steps": [
+        {
+          "op": "fixture.prepare",
+          "args": {
+            "fixtureId": "two-projects",
+            "variantId": "INTENT-001"
+          }
+        },
+        {
+          "op": "user.say",
+          "args": {
+            "text": "继续小董项目往下推进"
+          }
+        },
+        {
+          "op": "system.observe",
+          "args": {
+            "deadlineMs": 5000,
+            "deadlinePolicy": "driver_must_override_for_declared_long_operations"
+          }
+        }
+      ],
+      "expected": {
+        "narrative": "续上T_A并记录本轮，不要求先手动选卡",
+        "invariants": [
+          "INV01",
+          "INV04",
+          "INV17",
+          "INV25"
+        ]
+      },
+      "requiredLevels": [
+        "L1",
+        "L2"
+      ],
+      "evidenceRequired": [
+        "structured event/control trace with stable IDs",
+        "independent state/side-effect oracle",
+        "real adapter evidence for each claimed L2/L3 result"
+      ]
+    },
+    {
+      "id": "INTENT-002",
+      "area": "INTENT",
+      "title": "无卡但有明确交付",
+      "priority": "P0",
+      "status": "PLANNED",
+      "implementationRequired": true,
+      "given": {
+        "fixtureId": "two-projects",
+        "variantId": "INTENT-002",
+        "premise": "P_A无卡，用户有项目授权"
+      },
+      "steps": [
+        {
+          "op": "fixture.prepare",
+          "args": {
+            "fixtureId": "two-projects",
+            "variantId": "INTENT-002"
+          }
+        },
+        {
+          "op": "user.say",
+          "args": {
+            "text": "把这份访谈整理成一页摘要放项目里"
+          }
+        },
+        {
+          "op": "system.observe",
+          "args": {
+            "deadlineMs": 5000,
+            "deadlinePolicy": "driver_must_override_for_declared_long_operations"
+          }
+        }
+      ],
+      "expected": {
+        "narrative": "自动登记适当事项并执行，不只回复记下了",
+        "invariants": [
+          "INV01",
+          "INV04",
+          "INV17",
+          "INV25"
+        ]
+      },
+      "requiredLevels": [
+        "L1",
+        "L2"
+      ],
+      "evidenceRequired": [
+        "structured event/control trace with stable IDs",
+        "independent state/side-effect oracle",
+        "real adapter evidence for each claimed L2/L3 result"
+      ]
+    },
+    {
+      "id": "INTENT-003",
+      "area": "INTENT",
+      "title": "长语音多意图",
+      "priority": "P0",
+      "status": "PLANNED",
+      "implementationRequired": true,
+      "given": {
+        "fixtureId": "two-projects",
+        "variantId": "INTENT-003",
+        "premise": "P_A/P_B均已绑定"
+      },
+      "steps": [
+        {
+          "op": "fixture.prepare",
+          "args": {
+            "fixtureId": "two-projects",
+            "variantId": "INTENT-003"
+          }
+        },
+        {
+          "op": "user.say",
+          "args": {
+            "text": "先看看小董能做啥，哦对了作品集那份也帮我列个下一步，先别动作品集文件"
+          }
+        },
+        {
+          "op": "system.observe",
+          "args": {
+            "deadlineMs": 5000,
+            "deadlinePolicy": "driver_must_override_for_declared_long_operations"
+          }
+        }
+      ],
+      "expected": {
+        "narrative": "只对允许范围行动，区分研究/建议与文件写入",
+        "invariants": [
+          "INV01",
+          "INV04",
+          "INV17",
+          "INV25"
+        ]
+      },
+      "requiredLevels": [
+        "L1",
+        "L2"
+      ],
+      "evidenceRequired": [
+        "structured event/control trace with stable IDs",
+        "independent state/side-effect oracle",
+        "real adapter evidence for each claimed L2/L3 result"
+      ]
+    },
+    {
+      "id": "INTENT-004",
+      "area": "INTENT",
+      "title": "口述自我纠正",
+      "priority": "P0",
+      "status": "PLANNED",
+      "implementationRequired": true,
+      "given": {
+        "fixtureId": "two-projects",
+        "variantId": "INTENT-004",
+        "premise": "同名目标位于两个项目"
+      },
+      "steps": [
+        {
+          "op": "fixture.prepare",
+          "args": {
+            "fixtureId": "two-projects",
+            "variantId": "INTENT-004"
+          }
+        },
+        {
+          "op": "user.say",
+          "args": {
+            "text": "继续A项目，啊不是A，是B项目那个提案"
+          }
+        },
+        {
+          "op": "system.observe",
+          "args": {
+            "deadlineMs": 5000,
+            "deadlinePolicy": "driver_must_override_for_declared_long_operations"
+          }
+        }
+      ],
+      "expected": {
+        "narrative": "选择最终纠正后的P_B，P_A不执行",
+        "invariants": [
+          "INV01",
+          "INV04",
+          "INV17",
+          "INV25"
+        ]
+      },
+      "requiredLevels": [
+        "L1",
+        "L2"
+      ],
+      "evidenceRequired": [
+        "structured event/control trace with stable IDs",
+        "independent state/side-effect oracle",
+        "real adapter evidence for each claimed L2/L3 result"
+      ]
+    },
+    {
+      "id": "INTENT-005",
+      "area": "INTENT",
+      "title": "用户告知已完成",
+      "priority": "P0",
+      "status": "PLANNED",
+      "implementationRequired": true,
+      "given": {
+        "fixtureId": "two-projects",
+        "variantId": "INTENT-005",
+        "premise": "T_A已有成果但尚活跃"
+      },
+      "steps": [
+        {
+          "op": "fixture.prepare",
+          "args": {
+            "fixtureId": "two-projects",
+            "variantId": "INTENT-005"
+          }
+        },
+        {
+          "op": "user.say",
+          "args": {
+            "text": "刚才那个表我已经弄好了，这张可以收掉"
+          }
+        },
+        {
+          "op": "system.observe",
+          "args": {
+            "deadlineMs": 5000,
+            "deadlinePolicy": "driver_must_override_for_declared_long_operations"
+          }
+        }
+      ],
+      "expected": {
+        "narrative": "匹配唯一任务并记录用户确认，退出活跃列表而非删除",
+        "invariants": [
+          "INV01",
+          "INV04",
+          "INV17",
+          "INV25"
+        ]
+      },
+      "requiredLevels": [
+        "L1",
+        "L2"
+      ],
+      "evidenceRequired": [
+        "structured event/control trace with stable IDs",
+        "independent state/side-effect oracle",
+        "real adapter evidence for each claimed L2/L3 result"
+      ]
+    },
+    {
+      "id": "INTENT-006",
+      "area": "INTENT",
+      "title": "纯闲聊",
+      "priority": "P0",
+      "status": "PLANNED",
+      "implementationRequired": true,
+      "given": {
+        "fixtureId": "two-projects",
+        "variantId": "INTENT-006",
+        "premise": "后台有R_A但用户未要求新工作"
+      },
+      "steps": [
+        {
+          "op": "fixture.prepare",
+          "args": {
+            "fixtureId": "two-projects",
+            "variantId": "INTENT-006"
+          }
+        },
+        {
+          "op": "user.say",
+          "args": {
+            "text": "最近有点累，先随便聊聊"
+          }
+        },
+        {
+          "op": "system.observe",
+          "args": {
+            "deadlineMs": 5000,
+            "deadlinePolicy": "driver_must_override_for_declared_long_operations"
+          }
+        }
+      ],
+      "expected": {
+        "narrative": "继续聊天，不生成一批活跃任务",
+        "invariants": [
+          "INV01",
+          "INV04",
+          "INV17",
+          "INV25"
+        ]
+      },
+      "requiredLevels": [
+        "L1",
+        "L2"
+      ],
+      "evidenceRequired": [
+        "structured event/control trace with stable IDs",
+        "independent state/side-effect oracle",
+        "real adapter evidence for each claimed L2/L3 result"
+      ]
+    },
+    {
+      "id": "INTENT-007",
+      "area": "INTENT",
+      "title": "推荐不等于开工",
+      "priority": "P0",
+      "status": "PLANNED",
+      "implementationRequired": true,
+      "given": {
+        "fixtureId": "two-projects",
+        "variantId": "INTENT-007",
+        "premise": "有可推进T_A/T_B"
+      },
+      "steps": [
+        {
+          "op": "fixture.prepare",
+          "args": {
+            "fixtureId": "two-projects",
+            "variantId": "INTENT-007"
+          }
+        },
+        {
+          "op": "user.say",
+          "args": {
+            "text": "你看看今天有什么比较好推进的"
+          }
+        },
+        {
+          "op": "system.observe",
+          "args": {
+            "deadlineMs": 5000,
+            "deadlinePolicy": "driver_must_override_for_declared_long_operations"
+          }
+        }
+      ],
+      "expected": {
+        "narrative": "推荐少量候选并说明依据，未经选择不执行",
+        "invariants": [
+          "INV01",
+          "INV04",
+          "INV17",
+          "INV25"
+        ]
+      },
+      "requiredLevels": [
+        "L1",
+        "L2"
+      ],
+      "evidenceRequired": [
+        "structured event/control trace with stable IDs",
+        "independent state/side-effect oracle",
+        "real adapter evidence for each claimed L2/L3 result"
+      ]
+    },
+    {
+      "id": "INTENT-008",
+      "area": "INTENT",
+      "title": "代词指代不唯一",
+      "priority": "P0",
+      "status": "PLANNED",
+      "implementationRequired": true,
+      "given": {
+        "fixtureId": "two-projects",
+        "variantId": "INTENT-008",
+        "premise": "最近讨论两张不同卡"
+      },
+      "steps": [
+        {
+          "op": "fixture.prepare",
+          "args": {
+            "fixtureId": "two-projects",
+            "variantId": "INTENT-008"
+          }
+        },
+        {
+          "op": "user.say",
+          "args": {
+            "text": "就接着那个做吧"
+          }
+        },
+        {
+          "op": "system.observe",
+          "args": {
+            "deadlineMs": 5000,
+            "deadlinePolicy": "driver_must_override_for_declared_long_operations"
+          }
+        }
+      ],
+      "expected": {
+        "narrative": "一次简短澄清，不随机选择",
+        "invariants": [
+          "INV01",
+          "INV04",
+          "INV17",
+          "INV25"
+        ]
+      },
+      "requiredLevels": [
+        "L1",
+        "L2"
+      ],
+      "evidenceRequired": [
+        "structured event/control trace with stable IDs",
+        "independent state/side-effect oracle",
+        "real adapter evidence for each claimed L2/L3 result"
+      ]
+    },
+    {
+      "id": "INTENT-009",
+      "area": "INTENT",
+      "title": "修改当前要求",
+      "priority": "P0",
+      "status": "PLANNED",
+      "implementationRequired": true,
+      "given": {
+        "fixtureId": "two-projects",
+        "variantId": "INTENT-009",
+        "premise": "R_A正在写稿"
+      },
+      "steps": [
+        {
+          "op": "fixture.prepare",
+          "args": {
+            "fixtureId": "two-projects",
+            "variantId": "INTENT-009"
+          }
+        },
+        {
+          "op": "user.say",
+          "args": {
+            "text": "字数改成八百字，风格轻松一点"
+          }
+        },
+        {
+          "op": "system.observe",
+          "args": {
+            "deadlineMs": 5000,
+            "deadlinePolicy": "driver_must_override_for_declared_long_operations"
+          }
+        }
+      ],
+      "expected": {
+        "narrative": "修订同一工作要求，记录revision与执行边界",
+        "invariants": [
+          "INV01",
+          "INV04",
+          "INV17",
+          "INV25"
+        ]
+      },
+      "requiredLevels": [
+        "L1",
+        "L2"
+      ],
+      "evidenceRequired": [
+        "structured event/control trace with stable IDs",
+        "independent state/side-effect oracle",
+        "real adapter evidence for each claimed L2/L3 result"
+      ]
+    },
+    {
+      "id": "INTENT-010",
+      "area": "INTENT",
+      "title": "插入高优先小事",
+      "priority": "P0",
+      "status": "PLANNED",
+      "implementationRequired": true,
+      "given": {
+        "fixtureId": "two-projects",
+        "variantId": "INTENT-010",
+        "premise": "R_A长任务运行"
+      },
+      "steps": [
+        {
+          "op": "fixture.prepare",
+          "args": {
+            "fixtureId": "two-projects",
+            "variantId": "INTENT-010"
+          }
+        },
+        {
+          "op": "user.say",
+          "args": {
+            "text": "先帮我整理下今天会议要点，原来的继续"
+          }
+        },
+        {
+          "op": "system.observe",
+          "args": {
+            "deadlineMs": 5000,
+            "deadlinePolicy": "driver_must_override_for_declared_long_operations"
+          }
+        }
+      ],
+      "expected": {
+        "narrative": "新事项可推进，R_A不被误停",
+        "invariants": [
+          "INV01",
+          "INV04",
+          "INV17",
+          "INV25"
+        ]
+      },
+      "requiredLevels": [
+        "L1",
+        "L2"
+      ],
+      "evidenceRequired": [
+        "structured event/control trace with stable IDs",
+        "independent state/side-effect oracle",
+        "real adapter evidence for each claimed L2/L3 result"
+      ]
+    },
+    {
+      "id": "INTENT-011",
+      "area": "INTENT",
+      "title": "明确暂不执行",
+      "priority": "P0",
+      "status": "PLANNED",
+      "implementationRequired": true,
+      "given": {
+        "fixtureId": "two-projects",
+        "variantId": "INTENT-011",
+        "premise": "已有建议清单"
+      },
+      "steps": [
+        {
+          "op": "fixture.prepare",
+          "args": {
+            "fixtureId": "two-projects",
+            "variantId": "INTENT-011"
+          }
+        },
+        {
+          "op": "user.say",
+          "args": {
+            "text": "先讨论方案，别创建任务也别开始跑"
+          }
+        },
+        {
+          "op": "system.observe",
+          "args": {
+            "deadlineMs": 5000,
+            "deadlinePolicy": "driver_must_override_for_declared_long_operations"
+          }
+        }
+      ],
+      "expected": {
+        "narrative": "只讨论，不持久建卡或派发",
+        "invariants": [
+          "INV01",
+          "INV04",
+          "INV17",
+          "INV25"
+        ]
+      },
+      "requiredLevels": [
+        "L1",
+        "L2"
+      ],
+      "evidenceRequired": [
+        "structured event/control trace with stable IDs",
+        "independent state/side-effect oracle",
+        "real adapter evidence for each claimed L2/L3 result"
+      ]
+    },
+    {
+      "id": "INTENT-012",
+      "area": "INTENT",
+      "title": "否定与多项目",
+      "priority": "P0",
+      "status": "PLANNED",
+      "implementationRequired": true,
+      "given": {
+        "fixtureId": "two-projects",
+        "variantId": "INTENT-012",
+        "premise": "P_A/P_B都活跃"
+      },
+      "steps": [
+        {
+          "op": "fixture.prepare",
+          "args": {
+            "fixtureId": "two-projects",
+            "variantId": "INTENT-012"
+          }
+        },
+        {
+          "op": "user.say",
+          "args": {
+            "text": "不是让你做B，A继续，B等我补资料"
+          }
+        },
+        {
+          "op": "system.observe",
+          "args": {
+            "deadlineMs": 5000,
+            "deadlinePolicy": "driver_must_override_for_declared_long_operations"
+          }
+        }
+      ],
+      "expected": {
+        "narrative": "A继续，B标待资料，范围正确",
+        "invariants": [
+          "INV01",
+          "INV04",
+          "INV17",
+          "INV25"
+        ]
+      },
+      "requiredLevels": [
+        "L1",
+        "L2"
+      ],
+      "evidenceRequired": [
+        "structured event/control trace with stable IDs",
+        "independent state/side-effect oracle",
+        "real adapter evidence for each claimed L2/L3 result"
+      ]
+    },
+    {
+      "id": "CARD-001",
+      "area": "CARD",
+      "title": "复用已有卡",
+      "priority": "P0",
+      "status": "PLANNED",
+      "implementationRequired": true,
+      "given": {
+        "fixtureId": "task-ledger",
+        "variantId": "CARD-001",
+        "premise": "同一交付已有T_A"
+      },
+      "steps": [
+        {
+          "op": "fixture.prepare",
+          "args": {
+            "fixtureId": "task-ledger",
+            "variantId": "CARD-001"
+          }
+        },
+        {
+          "op": "user.say",
+          "args": {
+            "text": "这个报告继续完善"
+          }
+        },
+        {
+          "op": "system.observe",
+          "args": {
+            "deadlineMs": 5000,
+            "deadlinePolicy": "driver_must_override_for_declared_long_operations"
+          }
+        }
+      ],
+      "expected": {
+        "narrative": "复用T_A，不新增相同目标卡",
+        "invariants": [
+          "INV02",
+          "INV04",
+          "INV15",
+          "INV25"
+        ]
+      },
+      "requiredLevels": [
+        "L1",
+        "L2"
+      ],
+      "evidenceRequired": [
+        "structured event/control trace with stable IDs",
+        "independent state/side-effect oracle",
+        "real adapter evidence for each claimed L2/L3 result"
+      ]
+    },
+    {
+      "id": "CARD-002",
+      "area": "CARD",
+      "title": "阶段成果更新",
+      "priority": "P0",
+      "status": "PLANNED",
+      "implementationRequired": true,
+      "given": {
+        "fixtureId": "task-ledger",
+        "variantId": "CARD-002",
+        "premise": "R_A返回partial"
+      },
+      "steps": [
+        {
+          "op": "fixture.prepare",
+          "args": {
+            "fixtureId": "task-ledger",
+            "variantId": "CARD-002"
+          }
+        },
+        {
+          "op": "ui.act",
+          "args": {
+            "action": "查看任务进度"
+          }
+        },
+        {
+          "op": "system.observe",
+          "args": {
+            "deadlineMs": 5000,
+            "deadlinePolicy": "driver_must_override_for_declared_long_operations"
+          }
+        }
+      ],
+      "expected": {
+        "narrative": "状态和下一步自动更新，不靠用户全盘盘点",
+        "invariants": [
+          "INV02",
+          "INV04",
+          "INV15",
+          "INV25"
+        ]
+      },
+      "requiredLevels": [
+        "L1",
+        "L2"
+      ],
+      "evidenceRequired": [
+        "structured event/control trace with stable IDs",
+        "independent state/side-effect oracle",
+        "real adapter evidence for each claimed L2/L3 result"
+      ]
+    },
+    {
+      "id": "CARD-003",
+      "area": "CARD",
+      "title": "客观自动完成",
+      "priority": "P0",
+      "status": "PLANNED",
+      "implementationRequired": true,
+      "given": {
+        "fixtureId": "task-ledger",
+        "variantId": "CARD-003",
+        "premise": "T_A配置明确自动验收标准"
+      },
+      "steps": [
+        {
+          "op": "fixture.prepare",
+          "args": {
+            "fixtureId": "task-ledger",
+            "variantId": "CARD-003"
+          }
+        },
+        {
+          "op": "user.say",
+          "args": {
+            "text": "生成三列会议清单并保存"
+          }
+        },
+        {
+          "op": "system.observe",
+          "args": {
+            "deadlineMs": 5000,
+            "deadlinePolicy": "driver_must_override_for_declared_long_operations"
+          }
+        }
+      ],
+      "expected": {
+        "narrative": "标准通过后自动完成，证据与规则可查",
+        "invariants": [
+          "INV02",
+          "INV04",
+          "INV15",
+          "INV25"
+        ]
+      },
+      "requiredLevels": [
+        "L1",
+        "L2"
+      ],
+      "evidenceRequired": [
+        "structured event/control trace with stable IDs",
+        "independent state/side-effect oracle",
+        "real adapter evidence for each claimed L2/L3 result"
+      ]
+    },
+    {
+      "id": "CARD-004",
+      "area": "CARD",
+      "title": "主观任务待确认",
+      "priority": "P0",
+      "status": "PLANNED",
+      "implementationRequired": true,
+      "given": {
+        "fixtureId": "task-ledger",
+        "variantId": "CARD-004",
+        "premise": "T_A为品牌风格选择"
+      },
+      "steps": [
+        {
+          "op": "fixture.prepare",
+          "args": {
+            "fixtureId": "task-ledger",
+            "variantId": "CARD-004"
+          }
+        },
+        {
+          "op": "user.say",
+          "args": {
+            "text": "把最终风格方案给我看看"
+          }
+        },
+        {
+          "op": "system.observe",
+          "args": {
+            "deadlineMs": 5000,
+            "deadlinePolicy": "driver_must_override_for_declared_long_operations"
+          }
+        }
+      ],
+      "expected": {
+        "narrative": "进入待选择，不凭文件存在自动完成",
+        "invariants": [
+          "INV02",
+          "INV04",
+          "INV15",
+          "INV25"
+        ]
+      },
+      "requiredLevels": [
+        "L1",
+        "L2"
+      ],
+      "evidenceRequired": [
+        "structured event/control trace with stable IDs",
+        "independent state/side-effect oracle",
+        "real adapter evidence for each claimed L2/L3 result"
+      ]
+    },
+    {
+      "id": "CARD-005",
+      "area": "CARD",
+      "title": "worker越权建议done",
+      "priority": "P0",
+      "status": "PLANNED",
+      "implementationRequired": true,
+      "given": {
+        "fixtureId": "task-ledger",
+        "variantId": "CARD-005",
+        "premise": "成果不满足验收"
+      },
+      "steps": [
+        {
+          "op": "fixture.prepare",
+          "args": {
+            "fixtureId": "task-ledger",
+            "variantId": "CARD-005"
+          }
+        },
+        {
+          "op": "fault.inject",
+          "args": {
+            "fault": "worker_returns_done_without_evidence"
+          }
+        },
+        {
+          "op": "system.observe",
+          "args": {
+            "deadlineMs": 5000,
+            "deadlinePolicy": "driver_must_override_for_declared_long_operations"
+          }
+        }
+      ],
+      "expected": {
+        "narrative": "不直接将建议done写成最终完成",
+        "invariants": [
+          "INV02",
+          "INV04",
+          "INV15",
+          "INV25"
+        ]
+      },
+      "requiredLevels": [
+        "L1",
+        "L2"
+      ],
+      "evidenceRequired": [
+        "structured event/control trace with stable IDs",
+        "independent state/side-effect oracle",
+        "real adapter evidence for each claimed L2/L3 result"
+      ]
+    },
+    {
+      "id": "CARD-006",
+      "area": "CARD",
+      "title": "拆卡避免重复",
+      "priority": "P0",
+      "status": "PLANNED",
+      "implementationRequired": true,
+      "given": {
+        "fixtureId": "task-ledger",
+        "variantId": "CARD-006",
+        "premise": "大目标已有子卡"
+      },
+      "steps": [
+        {
+          "op": "fixture.prepare",
+          "args": {
+            "fixtureId": "task-ledger",
+            "variantId": "CARD-006"
+          }
+        },
+        {
+          "op": "user.say",
+          "args": {
+            "text": "把这个项目拆成几个能推进的小步骤"
+          }
+        },
+        {
+          "op": "system.observe",
+          "args": {
+            "deadlineMs": 5000,
+            "deadlinePolicy": "driver_must_override_for_declared_long_operations"
+          }
+        }
+      ],
+      "expected": {
+        "narrative": "保留关系、复用相同子卡",
+        "invariants": [
+          "INV02",
+          "INV04",
+          "INV15",
+          "INV25"
+        ]
+      },
+      "requiredLevels": [
+        "L1",
+        "L2"
+      ],
+      "evidenceRequired": [
+        "structured event/control trace with stable IDs",
+        "independent state/side-effect oracle",
+        "real adapter evidence for each claimed L2/L3 result"
+      ]
+    },
+    {
+      "id": "CARD-007",
+      "area": "CARD",
+      "title": "前置取消",
+      "priority": "P0",
+      "status": "PLANNED",
+      "implementationRequired": true,
+      "given": {
+        "fixtureId": "task-ledger",
+        "variantId": "CARD-007",
+        "premise": "T_B依赖T_A，T_A被取消"
+      },
+      "steps": [
+        {
+          "op": "fixture.prepare",
+          "args": {
+            "fixtureId": "task-ledger",
+            "variantId": "CARD-007"
+          }
+        },
+        {
+          "op": "ui.act",
+          "args": {
+            "action": "查看可推进任务"
+          }
+        },
+        {
+          "op": "system.observe",
+          "args": {
+            "deadlineMs": 5000,
+            "deadlinePolicy": "driver_must_override_for_declared_long_operations"
+          }
+        }
+      ],
+      "expected": {
+        "narrative": "T_B不被视为前置完成而自动开工",
+        "invariants": [
+          "INV02",
+          "INV04",
+          "INV15",
+          "INV25"
+        ]
+      },
+      "requiredLevels": [
+        "L1",
+        "L2"
+      ],
+      "evidenceRequired": [
+        "structured event/control trace with stable IDs",
+        "independent state/side-effect oracle",
+        "real adapter evidence for each claimed L2/L3 result"
+      ]
+    },
+    {
+      "id": "CARD-008",
+      "area": "CARD",
+      "title": "外部文件变化",
+      "priority": "P0",
+      "status": "PLANNED",
+      "implementationRequired": true,
+      "given": {
+        "fixtureId": "task-ledger",
+        "variantId": "CARD-008",
+        "premise": "项目由外部Agent修改"
+      },
+      "steps": [
+        {
+          "op": "fixture.prepare",
+          "args": {
+            "fixtureId": "task-ledger",
+            "variantId": "CARD-008"
+          }
+        },
+        {
+          "op": "fault.inject",
+          "args": {
+            "fault": "external_project_file_change"
+          }
+        },
+        {
+          "op": "system.observe",
+          "args": {
+            "deadlineMs": 5000,
+            "deadlinePolicy": "driver_must_override_for_declared_long_operations"
+          }
+        }
+      ],
+      "expected": {
+        "narrative": "只标相关项目需核对，局部对账而非全盘读",
+        "invariants": [
+          "INV02",
+          "INV04",
+          "INV15",
+          "INV25"
+        ]
+      },
+      "requiredLevels": [
+        "L1",
+        "L2"
+      ],
+      "evidenceRequired": [
+        "structured event/control trace with stable IDs",
+        "independent state/side-effect oracle",
+        "real adapter evidence for each claimed L2/L3 result"
+      ]
+    },
+    {
+      "id": "CARD-009",
+      "area": "CARD",
+      "title": "推荐考虑阻塞",
+      "priority": "P0",
+      "status": "PLANNED",
+      "implementationRequired": true,
+      "given": {
+        "fixtureId": "task-ledger",
+        "variantId": "CARD-009",
+        "premise": "高优先卡被阻塞，低优先可做"
+      },
+      "steps": [
+        {
+          "op": "fixture.prepare",
+          "args": {
+            "fixtureId": "task-ledger",
+            "variantId": "CARD-009"
+          }
+        },
+        {
+          "op": "user.say",
+          "args": {
+            "text": "我现在有二十分钟，挑几个能推进的"
+          }
+        },
+        {
+          "op": "system.observe",
+          "args": {
+            "deadlineMs": 5000,
+            "deadlinePolicy": "driver_must_override_for_declared_long_operations"
+          }
+        }
+      ],
+      "expected": {
+        "narrative": "优先可执行小步，解释等待项",
+        "invariants": [
+          "INV02",
+          "INV04",
+          "INV15",
+          "INV25"
+        ]
+      },
+      "requiredLevels": [
+        "L1",
+        "L2"
+      ],
+      "evidenceRequired": [
+        "structured event/control trace with stable IDs",
+        "independent state/side-effect oracle",
+        "real adapter evidence for each claimed L2/L3 result"
+      ]
+    },
+    {
+      "id": "CARD-010",
+      "area": "CARD",
+      "title": "完成可恢复",
+      "priority": "P0",
+      "status": "PLANNED",
+      "implementationRequired": true,
+      "given": {
+        "fixtureId": "task-ledger",
+        "variantId": "CARD-010",
+        "premise": "T_A已验收退出活跃区"
+      },
+      "steps": [
+        {
+          "op": "fixture.prepare",
+          "args": {
+            "fixtureId": "task-ledger",
+            "variantId": "CARD-010"
+          }
+        },
+        {
+          "op": "user.say",
+          "args": {
+            "text": "这张任务我还想再改一下"
+          }
+        },
+        {
+          "op": "system.observe",
+          "args": {
+            "deadlineMs": 5000,
+            "deadlinePolicy": "driver_must_override_for_declared_long_operations"
+          }
+        }
+      ],
+      "expected": {
+        "narrative": "恢复或建关联后续Run，历史与成果保留",
+        "invariants": [
+          "INV02",
+          "INV04",
+          "INV15",
+          "INV25"
+        ]
+      },
+      "requiredLevels": [
+        "L1",
+        "L2"
+      ],
+      "evidenceRequired": [
+        "structured event/control trace with stable IDs",
+        "independent state/side-effect oracle",
+        "real adapter evidence for each claimed L2/L3 result"
+      ]
+    },
+    {
+      "id": "SCHED-001",
+      "area": "SCHED",
+      "title": "A完成接B",
+      "priority": "P0",
+      "status": "PLANNED",
+      "implementationRequired": true,
+      "given": {
+        "fixtureId": "queued-batch",
+        "variantId": "SCHED-001",
+        "premise": "B依赖A，批次已接受"
+      },
+      "steps": [
+        {
+          "op": "fixture.prepare",
+          "args": {
+            "fixtureId": "queued-batch",
+            "variantId": "SCHED-001"
+          }
+        },
+        {
+          "op": "ui.act",
+          "args": {
+            "action": "推进A和B"
+          }
+        },
+        {
+          "op": "system.observe",
+          "args": {
+            "deadlineMs": 5000,
+            "deadlinePolicy": "driver_must_override_for_declared_long_operations"
+          }
+        }
+      ],
+      "expected": {
+        "narrative": "A验收条件满足后B自动进入可执行队列，不需再次派单",
+        "invariants": [
+          "INV03",
+          "INV04",
+          "INV11",
+          "INV26"
+        ]
+      },
+      "requiredLevels": [
+        "L1",
+        "L2"
+      ],
+      "evidenceRequired": [
+        "structured event/control trace with stable IDs",
+        "independent state/side-effect oracle",
+        "real adapter evidence for each claimed L2/L3 result"
+      ]
+    },
+    {
+      "id": "SCHED-002",
+      "area": "SCHED",
+      "title": "同项目串行",
+      "priority": "P0",
+      "status": "PLANNED",
+      "implementationRequired": true,
+      "given": {
+        "fixtureId": "queued-batch",
+        "variantId": "SCHED-002",
+        "premise": "同一项目两任务就绪"
+      },
+      "steps": [
+        {
+          "op": "fixture.prepare",
+          "args": {
+            "fixtureId": "queued-batch",
+            "variantId": "SCHED-002"
+          }
+        },
+        {
+          "op": "ui.act",
+          "args": {
+            "action": "推进两项同项目任务"
+          }
+        },
+        {
+          "op": "system.observe",
+          "args": {
+            "deadlineMs": 5000,
+            "deadlinePolicy": "driver_must_override_for_declared_long_operations"
+          }
+        }
+      ],
+      "expected": {
+        "narrative": "先后执行，未启动项持久排队不丢弃",
+        "invariants": [
+          "INV03",
+          "INV04",
+          "INV11",
+          "INV26"
+        ]
+      },
+      "requiredLevels": [
+        "L1",
+        "L2"
+      ],
+      "evidenceRequired": [
+        "structured event/control trace with stable IDs",
+        "independent state/side-effect oracle",
+        "real adapter evidence for each claimed L2/L3 result"
+      ]
+    },
+    {
+      "id": "SCHED-003",
+      "area": "SCHED",
+      "title": "全局并发",
+      "priority": "P0",
+      "status": "PLANNED",
+      "implementationRequired": true,
+      "given": {
+        "fixtureId": "queued-batch",
+        "variantId": "SCHED-003",
+        "premise": "三项目任务同时就绪"
+      },
+      "steps": [
+        {
+          "op": "fixture.prepare",
+          "args": {
+            "fixtureId": "queued-batch",
+            "variantId": "SCHED-003"
+          }
+        },
+        {
+          "op": "ui.act",
+          "args": {
+            "action": "推进三项任务"
+          }
+        },
+        {
+          "op": "system.observe",
+          "args": {
+            "deadlineMs": 5000,
+            "deadlinePolicy": "driver_must_override_for_declared_long_operations"
+          }
+        }
+      ],
+      "expected": {
+        "narrative": "达到上限后排队，释放名额后自动开工",
+        "invariants": [
+          "INV03",
+          "INV04",
+          "INV11",
+          "INV26"
+        ]
+      },
+      "requiredLevels": [
+        "L1",
+        "L2"
+      ],
+      "evidenceRequired": [
+        "structured event/control trace with stable IDs",
+        "independent state/side-effect oracle",
+        "real adapter evidence for each claimed L2/L3 result"
+      ]
+    },
+    {
+      "id": "SCHED-004",
+      "area": "SCHED",
+      "title": "重复派发",
+      "priority": "P0",
+      "status": "PLANNED",
+      "implementationRequired": true,
+      "given": {
+        "fixtureId": "queued-batch",
+        "variantId": "SCHED-004",
+        "premise": "相同clientRequestId再次到达"
+      },
+      "steps": [
+        {
+          "op": "fixture.prepare",
+          "args": {
+            "fixtureId": "queued-batch",
+            "variantId": "SCHED-004"
+          }
+        },
+        {
+          "op": "fault.inject",
+          "args": {
+            "fault": "duplicate_dispatch_request"
+          }
+        },
+        {
+          "op": "system.observe",
+          "args": {
+            "deadlineMs": 5000,
+            "deadlinePolicy": "driver_must_override_for_declared_long_operations"
+          }
+        }
+      ],
+      "expected": {
+        "narrative": "只有一次业务受理与实际执行",
+        "invariants": [
+          "INV03",
+          "INV04",
+          "INV11",
+          "INV26"
+        ]
+      },
+      "requiredLevels": [
+        "L1",
+        "L2"
+      ],
+      "evidenceRequired": [
+        "structured event/control trace with stable IDs",
+        "independent state/side-effect oracle",
+        "real adapter evidence for each claimed L2/L3 result"
+      ]
+    },
+    {
+      "id": "SCHED-005",
+      "area": "SCHED",
+      "title": "ACK丢失",
+      "priority": "P0",
+      "status": "PLANNED",
+      "implementationRequired": true,
+      "given": {
+        "fixtureId": "queued-batch",
+        "variantId": "SCHED-005",
+        "premise": "Windows已受理R_A"
+      },
+      "steps": [
+        {
+          "op": "fixture.prepare",
+          "args": {
+            "fixtureId": "queued-batch",
+            "variantId": "SCHED-005"
+          }
+        },
+        {
+          "op": "fault.inject",
+          "args": {
+            "fault": "drop_dispatch_ack"
+          }
+        },
+        {
+          "op": "system.observe",
+          "args": {
+            "deadlineMs": 5000,
+            "deadlinePolicy": "driver_must_override_for_declared_long_operations"
+          }
+        }
+      ],
+      "expected": {
+        "narrative": "客户端查询原请求，不再创建第二次执行",
+        "invariants": [
+          "INV03",
+          "INV04",
+          "INV11",
+          "INV26"
+        ]
+      },
+      "requiredLevels": [
+        "L1",
+        "L2"
+      ],
+      "evidenceRequired": [
+        "structured event/control trace with stable IDs",
+        "independent state/side-effect oracle",
+        "real adapter evidence for each claimed L2/L3 result"
+      ]
+    },
+    {
+      "id": "SCHED-006",
+      "area": "SCHED",
+      "title": "依赖失败",
+      "priority": "P0",
+      "status": "PLANNED",
+      "implementationRequired": true,
+      "given": {
+        "fixtureId": "queued-batch",
+        "variantId": "SCHED-006",
+        "premise": "A执行失败，B等待A"
+      },
+      "steps": [
+        {
+          "op": "fixture.prepare",
+          "args": {
+            "fixtureId": "queued-batch",
+            "variantId": "SCHED-006"
+          }
+        },
+        {
+          "op": "ui.act",
+          "args": {
+            "action": "查看批次"
+          }
+        },
+        {
+          "op": "system.observe",
+          "args": {
+            "deadlineMs": 5000,
+            "deadlinePolicy": "driver_must_override_for_declared_long_operations"
+          }
+        }
+      ],
+      "expected": {
+        "narrative": "B阻塞并显示原因，不自动跳过验收",
+        "invariants": [
+          "INV03",
+          "INV04",
+          "INV11",
+          "INV26"
+        ]
+      },
+      "requiredLevels": [
+        "L1",
+        "L2"
+      ],
+      "evidenceRequired": [
+        "structured event/control trace with stable IDs",
+        "independent state/side-effect oracle",
+        "real adapter evidence for each claimed L2/L3 result"
+      ]
+    },
+    {
+      "id": "SCHED-007",
+      "area": "SCHED",
+      "title": "新要求晚到",
+      "priority": "P0",
+      "status": "PLANNED",
+      "implementationRequired": true,
+      "given": {
+        "fixtureId": "queued-batch",
+        "variantId": "SCHED-007",
+        "premise": "R_A已开始工具调用"
+      },
+      "steps": [
+        {
+          "op": "fixture.prepare",
+          "args": {
+            "fixtureId": "queued-batch",
+            "variantId": "SCHED-007"
+          }
+        },
+        {
+          "op": "user.say",
+          "args": {
+            "text": "增加一列预算，刚才的内容保留"
+          }
+        },
+        {
+          "op": "system.observe",
+          "args": {
+            "deadlineMs": 5000,
+            "deadlinePolicy": "driver_must_override_for_declared_long_operations"
+          }
+        }
+      ],
+      "expected": {
+        "narrative": "按安全边界steer/后续Run，不卡死或重复全做",
+        "invariants": [
+          "INV03",
+          "INV04",
+          "INV11",
+          "INV26"
+        ]
+      },
+      "requiredLevels": [
+        "L1",
+        "L2"
+      ],
+      "evidenceRequired": [
+        "structured event/control trace with stable IDs",
+        "independent state/side-effect oracle",
+        "real adapter evidence for each claimed L2/L3 result"
+      ]
+    },
+    {
+      "id": "SCHED-008",
+      "area": "SCHED",
+      "title": "非Git项目",
+      "priority": "P0",
+      "status": "PLANNED",
+      "implementationRequired": true,
+      "given": {
+        "fixtureId": "queued-batch",
+        "variantId": "SCHED-008",
+        "premise": "P_A是设计素材目录"
+      },
+      "steps": [
+        {
+          "op": "fixture.prepare",
+          "args": {
+            "fixtureId": "queued-batch",
+            "variantId": "SCHED-008"
+          }
+        },
+        {
+          "op": "user.say",
+          "args": {
+            "text": "整理三张参考图的命名清单"
+          }
+        },
+        {
+          "op": "system.observe",
+          "args": {
+            "deadlineMs": 5000,
+            "deadlinePolicy": "driver_must_override_for_declared_long_operations"
+          }
+        }
+      ],
+      "expected": {
+        "narrative": "无需Git或worktree也能执行与回写",
+        "invariants": [
+          "INV03",
+          "INV04",
+          "INV11",
+          "INV26"
+        ]
+      },
+      "requiredLevels": [
+        "L1",
+        "L2"
+      ],
+      "evidenceRequired": [
+        "structured event/control trace with stable IDs",
+        "independent state/side-effect oracle",
+        "real adapter evidence for each claimed L2/L3 result"
+      ]
+    },
+    {
+      "id": "SCHED-009",
+      "area": "SCHED",
+      "title": "worker无交接",
+      "priority": "P0",
+      "status": "PLANNED",
+      "implementationRequired": true,
+      "given": {
+        "fixtureId": "queued-batch",
+        "variantId": "SCHED-009",
+        "premise": "真实worker退出无结构化结果"
+      },
+      "steps": [
+        {
+          "op": "fixture.prepare",
+          "args": {
+            "fixtureId": "queued-batch",
+            "variantId": "SCHED-009"
+          }
+        },
+        {
+          "op": "fault.inject",
+          "args": {
+            "fault": "worker_exit_without_handoff"
+          }
+        },
+        {
+          "op": "system.observe",
+          "args": {
+            "deadlineMs": 5000,
+            "deadlinePolicy": "driver_must_override_for_declared_long_operations"
+          }
+        }
+      ],
+      "expected": {
+        "narrative": "记录待核对/失败，不能假完成",
+        "invariants": [
+          "INV03",
+          "INV04",
+          "INV11",
+          "INV26"
+        ]
+      },
+      "requiredLevels": [
+        "L1",
+        "L2"
+      ],
+      "evidenceRequired": [
+        "structured event/control trace with stable IDs",
+        "independent state/side-effect oracle",
+        "real adapter evidence for each claimed L2/L3 result"
+      ]
+    },
+    {
+      "id": "SCHED-010",
+      "area": "SCHED",
+      "title": "外部工作未登记",
+      "priority": "P0",
+      "status": "PLANNED",
+      "implementationRequired": true,
+      "given": {
+        "fixtureId": "queued-batch",
+        "variantId": "SCHED-010",
+        "premise": "发现无法归属的job"
+      },
+      "steps": [
+        {
+          "op": "fixture.prepare",
+          "args": {
+            "fixtureId": "queued-batch",
+            "variantId": "SCHED-010"
+          }
+        },
+        {
+          "op": "fault.inject",
+          "args": {
+            "fault": "unmapped_background_job"
+          }
+        },
+        {
+          "op": "system.observe",
+          "args": {
+            "deadlineMs": 5000,
+            "deadlinePolicy": "driver_must_override_for_declared_long_operations"
+          }
+        }
+      ],
+      "expected": {
+        "narrative": "显示诊断与控制边界，不冒称全覆盖",
+        "invariants": [
+          "INV03",
+          "INV04",
+          "INV11",
+          "INV26"
+        ]
+      },
+      "requiredLevels": [
+        "L1",
+        "L2"
+      ],
+      "evidenceRequired": [
+        "structured event/control trace with stable IDs",
+        "independent state/side-effect oracle",
+        "real adapter evidence for each claimed L2/L3 result"
+      ]
+    },
+    {
+      "id": "STOP-001",
+      "area": "STOP",
+      "title": "主助理idle后台仍跑",
+      "priority": "P0",
+      "status": "PLANNED",
+      "implementationRequired": true,
+      "given": {
+        "fixtureId": "running-tree",
+        "variantId": "STOP-001",
+        "premise": "主回合结束，R_A运行"
+      },
+      "steps": [
+        {
+          "op": "fixture.prepare",
+          "args": {
+            "fixtureId": "running-tree",
+            "variantId": "STOP-001"
+          }
+        },
+        {
+          "op": "ui.act",
+          "args": {
+            "action": "停止这次工作"
+          }
+        },
+        {
+          "op": "system.observe",
+          "args": {
+            "deadlineMs": 5000,
+            "deadlinePolicy": "driver_must_override_for_declared_long_operations"
+          }
+        }
+      ],
+      "expected": {
+        "narrative": "按钮仍可用，直达Host，R_A收敛",
+        "invariants": [
+          "INV05",
+          "INV06",
+          "INV07",
+          "INV08",
+          "INV09",
+          "INV18"
+        ]
+      },
+      "requiredLevels": [
+        "L1",
+        "L2",
+        "L3"
+      ],
+      "evidenceRequired": [
+        "structured event/control trace with stable IDs",
+        "independent state/side-effect oracle",
+        "real adapter evidence for each claimed L2/L3 result"
+      ]
+    },
+    {
+      "id": "STOP-002",
+      "area": "STOP",
+      "title": "当前请求尚在规划",
+      "priority": "P0",
+      "status": "PLANNED",
+      "implementationRequired": true,
+      "given": {
+        "fixtureId": "running-tree",
+        "variantId": "STOP-002",
+        "premise": "主助理generating，未派发"
+      },
+      "steps": [
+        {
+          "op": "fixture.prepare",
+          "args": {
+            "fixtureId": "running-tree",
+            "variantId": "STOP-002"
+          }
+        },
+        {
+          "op": "ui.act",
+          "args": {
+            "action": "停止本次请求"
+          }
+        },
+        {
+          "op": "system.observe",
+          "args": {
+            "deadlineMs": 5000,
+            "deadlinePolicy": "driver_must_override_for_declared_long_operations"
+          }
+        }
+      ],
+      "expected": {
+        "narrative": "当前生成停止，不再派发其工作",
+        "invariants": [
+          "INV05",
+          "INV06",
+          "INV07",
+          "INV08",
+          "INV09",
+          "INV18"
+        ]
+      },
+      "requiredLevels": [
+        "L1",
+        "L2",
+        "L3"
+      ],
+      "evidenceRequired": [
+        "structured event/control trace with stable IDs",
+        "independent state/side-effect oracle",
+        "real adapter evidence for each claimed L2/L3 result"
+      ]
+    },
+    {
+      "id": "STOP-003",
+      "area": "STOP",
+      "title": "停止已排队未启动",
+      "priority": "P0",
+      "status": "PLANNED",
+      "implementationRequired": true,
+      "given": {
+        "fixtureId": "running-tree",
+        "variantId": "STOP-003",
+        "premise": "R_B queued"
+      },
+      "steps": [
+        {
+          "op": "fixture.prepare",
+          "args": {
+            "fixtureId": "running-tree",
+            "variantId": "STOP-003"
+          }
+        },
+        {
+          "op": "ui.act",
+          "args": {
+            "action": "停止本轮执行R_B"
+          }
+        },
+        {
+          "op": "system.observe",
+          "args": {
+            "deadlineMs": 5000,
+            "deadlinePolicy": "driver_must_override_for_declared_long_operations"
+          }
+        }
+      ],
+      "expected": {
+        "narrative": "R_B不创建worker，其他Run正常",
+        "invariants": [
+          "INV05",
+          "INV06",
+          "INV07",
+          "INV08",
+          "INV09",
+          "INV18"
+        ]
+      },
+      "requiredLevels": [
+        "L1",
+        "L2",
+        "L3"
+      ],
+      "evidenceRequired": [
+        "structured event/control trace with stable IDs",
+        "independent state/side-effect oracle",
+        "real adapter evidence for each claimed L2/L3 result"
+      ]
+    },
+    {
+      "id": "STOP-004",
+      "area": "STOP",
+      "title": "Agent创建中停止",
+      "priority": "P0",
+      "status": "PLANNED",
+      "implementationRequired": true,
+      "given": {
+        "fixtureId": "running-tree",
+        "variantId": "STOP-004",
+        "premise": "R_A处于creating"
+      },
+      "steps": [
+        {
+          "op": "fixture.prepare",
+          "args": {
+            "fixtureId": "running-tree",
+            "variantId": "STOP-004"
+          }
+        },
+        {
+          "op": "fault.inject",
+          "args": {
+            "fault": "stop_during_agent_create"
+          }
+        },
+        {
+          "op": "system.observe",
+          "args": {
+            "deadlineMs": 5000,
+            "deadlinePolicy": "driver_must_override_for_declared_long_operations"
+          }
+        }
+      ],
+      "expected": {
+        "narrative": "创建取消或新Agent立即纳入停止，无漏网执行",
+        "invariants": [
+          "INV05",
+          "INV06",
+          "INV07",
+          "INV08",
+          "INV09",
+          "INV18"
+        ]
+      },
+      "requiredLevels": [
+        "L1",
+        "L2",
+        "L3"
+      ],
+      "evidenceRequired": [
+        "structured event/control trace with stable IDs",
+        "independent state/side-effect oracle",
+        "real adapter evidence for each claimed L2/L3 result"
+      ]
+    },
+    {
+      "id": "STOP-005",
+      "area": "STOP",
+      "title": "模型输出中停止",
+      "priority": "P0",
+      "status": "PLANNED",
+      "implementationRequired": true,
+      "given": {
+        "fixtureId": "running-tree",
+        "variantId": "STOP-005",
+        "premise": "R_A正在生成"
+      },
+      "steps": [
+        {
+          "op": "fixture.prepare",
+          "args": {
+            "fixtureId": "running-tree",
+            "variantId": "STOP-005"
+          }
+        },
+        {
+          "op": "ui.act",
+          "args": {
+            "action": "停止本轮执行R_A"
+          }
+        },
+        {
+          "op": "system.observe",
+          "args": {
+            "deadlineMs": 5000,
+            "deadlinePolicy": "driver_must_override_for_declared_long_operations"
+          }
+        }
+      ],
+      "expected": {
+        "narrative": "真实Agent取消，停止回执与实际一致",
+        "invariants": [
+          "INV05",
+          "INV06",
+          "INV07",
+          "INV08",
+          "INV09",
+          "INV18"
+        ]
+      },
+      "requiredLevels": [
+        "L1",
+        "L2",
+        "L3"
+      ],
+      "evidenceRequired": [
+        "structured event/control trace with stable IDs",
+        "independent state/side-effect oracle",
+        "real adapter evidence for each claimed L2/L3 result"
+      ]
+    },
+    {
+      "id": "STOP-006",
+      "area": "STOP",
+      "title": "可取消工具中停止",
+      "priority": "P0",
+      "status": "PLANNED",
+      "implementationRequired": true,
+      "given": {
+        "fixtureId": "running-tree",
+        "variantId": "STOP-006",
+        "premise": "R_A计数器工具运行"
+      },
+      "steps": [
+        {
+          "op": "fixture.prepare",
+          "args": {
+            "fixtureId": "running-tree",
+            "variantId": "STOP-006"
+          }
+        },
+        {
+          "op": "ui.act",
+          "args": {
+            "action": "停止本轮执行R_A"
+          }
+        },
+        {
+          "op": "system.observe",
+          "args": {
+            "deadlineMs": 5000,
+            "deadlinePolicy": "driver_must_override_for_declared_long_operations"
+          }
+        }
+      ],
+      "expected": {
+        "narrative": "工具收到取消并停止计数，保存部分结果",
+        "invariants": [
+          "INV05",
+          "INV06",
+          "INV07",
+          "INV08",
+          "INV09",
+          "INV18"
+        ]
+      },
+      "requiredLevels": [
+        "L1",
+        "L2",
+        "L3"
+      ],
+      "evidenceRequired": [
+        "structured event/control trace with stable IDs",
+        "independent state/side-effect oracle",
+        "real adapter evidence for each claimed L2/L3 result"
+      ]
+    },
+    {
+      "id": "STOP-007",
+      "area": "STOP",
+      "title": "不可取消工具中停止",
+      "priority": "P0",
+      "status": "PLANNED",
+      "implementationRequired": true,
+      "given": {
+        "fixtureId": "running-tree",
+        "variantId": "STOP-007",
+        "premise": "R_A工具不支持中断"
+      },
+      "steps": [
+        {
+          "op": "fixture.prepare",
+          "args": {
+            "fixtureId": "running-tree",
+            "variantId": "STOP-007"
+          }
+        },
+        {
+          "op": "ui.act",
+          "args": {
+            "action": "停止本轮执行R_A"
+          }
+        },
+        {
+          "op": "system.observe",
+          "args": {
+            "deadlineMs": 5000,
+            "deadlinePolicy": "driver_must_override_for_declared_long_operations"
+          }
+        }
+      ],
+      "expected": {
+        "narrative": "显示停止中/无法立即取消，不假报已停",
+        "invariants": [
+          "INV05",
+          "INV06",
+          "INV07",
+          "INV08",
+          "INV09",
+          "INV18"
+        ]
+      },
+      "requiredLevels": [
+        "L1",
+        "L2",
+        "L3"
+      ],
+      "evidenceRequired": [
+        "structured event/control trace with stable IDs",
+        "independent state/side-effect oracle",
+        "real adapter evidence for each claimed L2/L3 result"
+      ]
+    },
+    {
+      "id": "STOP-008",
+      "area": "STOP",
+      "title": "停止等待审批",
+      "priority": "P0",
+      "status": "PLANNED",
+      "implementationRequired": true,
+      "given": {
+        "fixtureId": "running-tree",
+        "variantId": "STOP-008",
+        "premise": "R_A await_approval"
+      },
+      "steps": [
+        {
+          "op": "fixture.prepare",
+          "args": {
+            "fixtureId": "running-tree",
+            "variantId": "STOP-008"
+          }
+        },
+        {
+          "op": "ui.act",
+          "args": {
+            "action": "停止本轮执行R_A"
+          }
+        },
+        {
+          "op": "system.observe",
+          "args": {
+            "deadlineMs": 5000,
+            "deadlinePolicy": "driver_must_override_for_declared_long_operations"
+          }
+        }
+      ],
+      "expected": {
+        "narrative": "审批失效，不会在稍后批准时执行",
+        "invariants": [
+          "INV05",
+          "INV06",
+          "INV07",
+          "INV08",
+          "INV09",
+          "INV18"
+        ]
+      },
+      "requiredLevels": [
+        "L1",
+        "L2",
+        "L3"
+      ],
+      "evidenceRequired": [
+        "structured event/control trace with stable IDs",
+        "independent state/side-effect oracle",
+        "real adapter evidence for each claimed L2/L3 result"
+      ]
+    },
+    {
+      "id": "STOP-009",
+      "area": "STOP",
+      "title": "子孙执行停止",
+      "priority": "P0",
+      "status": "PLANNED",
+      "implementationRequired": true,
+      "given": {
+        "fixtureId": "running-tree",
+        "variantId": "STOP-009",
+        "premise": "R_A有两层受管理child"
+      },
+      "steps": [
+        {
+          "op": "fixture.prepare",
+          "args": {
+            "fixtureId": "running-tree",
+            "variantId": "STOP-009"
+          }
+        },
+        {
+          "op": "ui.act",
+          "args": {
+            "action": "停止这次工作"
+          }
+        },
+        {
+          "op": "system.observe",
+          "args": {
+            "deadlineMs": 5000,
+            "deadlinePolicy": "driver_must_override_for_declared_long_operations"
+          }
+        }
+      ],
+      "expected": {
+        "narrative": "取消树覆盖子孙，等待清理或明确未停止项",
+        "invariants": [
+          "INV05",
+          "INV06",
+          "INV07",
+          "INV08",
+          "INV09",
+          "INV18"
+        ]
+      },
+      "requiredLevels": [
+        "L1",
+        "L2",
+        "L3"
+      ],
+      "evidenceRequired": [
+        "structured event/control trace with stable IDs",
+        "independent state/side-effect oracle",
+        "real adapter evidence for each claimed L2/L3 result"
+      ]
+    },
+    {
+      "id": "STOP-010",
+      "area": "STOP",
+      "title": "独立job停止",
+      "priority": "P0",
+      "status": "PLANNED",
+      "implementationRequired": true,
+      "given": {
+        "fixtureId": "running-tree",
+        "variantId": "STOP-010",
+        "premise": "worker持有独立job"
+      },
+      "steps": [
+        {
+          "op": "fixture.prepare",
+          "args": {
+            "fixtureId": "running-tree",
+            "variantId": "STOP-010"
+          }
+        },
+        {
+          "op": "ui.act",
+          "args": {
+            "action": "停止这次工作"
+          }
+        },
+        {
+          "op": "system.observe",
+          "args": {
+            "deadlineMs": 5000,
+            "deadlinePolicy": "driver_must_override_for_declared_long_operations"
+          }
+        }
+      ],
+      "expected": {
+        "narrative": "用worker正确owner控制job，不错用主助理身份",
+        "invariants": [
+          "INV05",
+          "INV06",
+          "INV07",
+          "INV08",
+          "INV09",
+          "INV18"
+        ]
+      },
+      "requiredLevels": [
+        "L1",
+        "L2",
+        "L3"
+      ],
+      "evidenceRequired": [
+        "structured event/control trace with stable IDs",
+        "independent state/side-effect oracle",
+        "real adapter evidence for each claimed L2/L3 result"
+      ]
+    },
+    {
+      "id": "STOP-011",
+      "area": "STOP",
+      "title": "只停A保留B",
+      "priority": "P0",
+      "status": "PLANNED",
+      "implementationRequired": true,
+      "given": {
+        "fixtureId": "running-tree",
+        "variantId": "STOP-011",
+        "premise": "R_A/R_B分属不同意图"
+      },
+      "steps": [
+        {
+          "op": "fixture.prepare",
+          "args": {
+            "fixtureId": "running-tree",
+            "variantId": "STOP-011"
+          }
+        },
+        {
+          "op": "user.say",
+          "args": {
+            "text": "停止A，B继续"
+          }
+        },
+        {
+          "op": "system.observe",
+          "args": {
+            "deadlineMs": 5000,
+            "deadlinePolicy": "driver_must_override_for_declared_long_operations"
+          }
+        }
+      ],
+      "expected": {
+        "narrative": "A停止，B状态与执行不受影响",
+        "invariants": [
+          "INV05",
+          "INV06",
+          "INV07",
+          "INV08",
+          "INV09",
+          "INV18"
+        ]
+      },
+      "requiredLevels": [
+        "L1",
+        "L2",
+        "L3"
+      ],
+      "evidenceRequired": [
+        "structured event/control trace with stable IDs",
+        "independent state/side-effect oracle",
+        "real adapter evidence for each claimed L2/L3 result"
+      ]
+    },
+    {
+      "id": "STOP-012",
+      "area": "STOP",
+      "title": "停止批次",
+      "priority": "P0",
+      "status": "PLANNED",
+      "implementationRequired": true,
+      "given": {
+        "fixtureId": "running-tree",
+        "variantId": "STOP-012",
+        "premise": "批次含running/queued/blocked"
+      },
+      "steps": [
+        {
+          "op": "fixture.prepare",
+          "args": {
+            "fixtureId": "running-tree",
+            "variantId": "STOP-012"
+          }
+        },
+        {
+          "op": "ui.act",
+          "args": {
+            "action": "停止批次"
+          }
+        },
+        {
+          "op": "system.observe",
+          "args": {
+            "deadlineMs": 5000,
+            "deadlinePolicy": "driver_must_override_for_declared_long_operations"
+          }
+        }
+      ],
+      "expected": {
+        "narrative": "所有批次项冻结/收敛，队列不再补发",
+        "invariants": [
+          "INV05",
+          "INV06",
+          "INV07",
+          "INV08",
+          "INV09",
+          "INV18"
+        ]
+      },
+      "requiredLevels": [
+        "L1",
+        "L2",
+        "L3"
+      ],
+      "evidenceRequired": [
+        "structured event/control trace with stable IDs",
+        "independent state/side-effect oracle",
+        "real adapter evidence for each claimed L2/L3 result"
+      ]
+    },
+    {
+      "id": "STOP-013",
+      "area": "STOP",
+      "title": "停止全部工作台工作",
+      "priority": "P0",
+      "status": "PLANNED",
+      "implementationRequired": true,
+      "given": {
+        "fixtureId": "running-tree",
+        "variantId": "STOP-013",
+        "premise": "多个项目运行且有外部非工作台任务"
+      },
+      "steps": [
+        {
+          "op": "fixture.prepare",
+          "args": {
+            "fixtureId": "running-tree",
+            "variantId": "STOP-013"
+          }
+        },
+        {
+          "op": "ui.act",
+          "args": {
+            "action": "停止工作台全部工作"
+          }
+        },
+        {
+          "op": "system.observe",
+          "args": {
+            "deadlineMs": 5000,
+            "deadlinePolicy": "driver_must_override_for_declared_long_operations"
+          }
+        }
+      ],
+      "expected": {
+        "narrative": "覆盖工作台登记项，不停止无关外部任务或整个DSH",
+        "invariants": [
+          "INV05",
+          "INV06",
+          "INV07",
+          "INV08",
+          "INV09",
+          "INV18"
+        ]
+      },
+      "requiredLevels": [
+        "L1",
+        "L2",
+        "L3"
+      ],
+      "evidenceRequired": [
+        "structured event/control trace with stable IDs",
+        "independent state/side-effect oracle",
+        "real adapter evidence for each claimed L2/L3 result"
+      ]
+    },
+    {
+      "id": "STOP-014",
+      "area": "STOP",
+      "title": "全停后迟到派单",
+      "priority": "P0",
+      "status": "PLANNED",
+      "implementationRequired": true,
+      "given": {
+        "fixtureId": "running-tree",
+        "variantId": "STOP-014",
+        "premise": "停止epoch已持久化"
+      },
+      "steps": [
+        {
+          "op": "fixture.prepare",
+          "args": {
+            "fixtureId": "running-tree",
+            "variantId": "STOP-014"
+          }
+        },
+        {
+          "op": "fault.inject",
+          "args": {
+            "fault": "late_dispatch_after_stop_epoch"
+          }
+        },
+        {
+          "op": "system.observe",
+          "args": {
+            "deadlineMs": 5000,
+            "deadlinePolicy": "driver_must_override_for_declared_long_operations"
+          }
+        }
+      ],
+      "expected": {
+        "narrative": "派发被拒绝，不重新唤醒",
+        "invariants": [
+          "INV05",
+          "INV06",
+          "INV07",
+          "INV08",
+          "INV09",
+          "INV18"
+        ]
+      },
+      "requiredLevels": [
+        "L1",
+        "L2",
+        "L3"
+      ],
+      "evidenceRequired": [
+        "structured event/control trace with stable IDs",
+        "independent state/side-effect oracle",
+        "real adapter evidence for each claimed L2/L3 result"
+      ]
+    },
+    {
+      "id": "STOP-015",
+      "area": "STOP",
+      "title": "重复停止",
+      "priority": "P0",
+      "status": "PLANNED",
+      "implementationRequired": true,
+      "given": {
+        "fixtureId": "running-tree",
+        "variantId": "STOP-015",
+        "premise": "Stop已受理"
+      },
+      "steps": [
+        {
+          "op": "fixture.prepare",
+          "args": {
+            "fixtureId": "running-tree",
+            "variantId": "STOP-015"
+          }
+        },
+        {
+          "op": "ui.act",
+          "args": {
+            "action": "重复点击停止"
+          }
+        },
+        {
+          "op": "system.observe",
+          "args": {
+            "deadlineMs": 5000,
+            "deadlinePolicy": "driver_must_override_for_declared_long_operations"
+          }
+        }
+      ],
+      "expected": {
+        "narrative": "幂等返回同一控制结果，无重复副作用",
+        "invariants": [
+          "INV05",
+          "INV06",
+          "INV07",
+          "INV08",
+          "INV09",
+          "INV18"
+        ]
+      },
+      "requiredLevels": [
+        "L1",
+        "L2",
+        "L3"
+      ],
+      "evidenceRequired": [
+        "structured event/control trace with stable IDs",
+        "independent state/side-effect oracle",
+        "real adapter evidence for each claimed L2/L3 result"
+      ]
+    },
+    {
+      "id": "STOP-016",
+      "area": "STOP",
+      "title": "完成先于停止",
+      "priority": "P0",
+      "status": "PLANNED",
+      "implementationRequired": true,
+      "given": {
+        "fixtureId": "running-tree",
+        "variantId": "STOP-016",
+        "premise": "完成已提交到Windows事件序"
+      },
+      "steps": [
+        {
+          "op": "fixture.prepare",
+          "args": {
+            "fixtureId": "running-tree",
+            "variantId": "STOP-016"
+          }
+        },
+        {
+          "op": "ui.act",
+          "args": {
+            "action": "停止已完成工作"
+          }
+        },
+        {
+          "op": "system.observe",
+          "args": {
+            "deadlineMs": 5000,
+            "deadlinePolicy": "driver_must_override_for_declared_long_operations"
+          }
+        }
+      ],
+      "expected": {
+        "narrative": "返回already_terminal，保留完成事实",
+        "invariants": [
+          "INV05",
+          "INV06",
+          "INV07",
+          "INV08",
+          "INV09",
+          "INV18"
+        ]
+      },
+      "requiredLevels": [
+        "L1",
+        "L2",
+        "L3"
+      ],
+      "evidenceRequired": [
+        "structured event/control trace with stable IDs",
+        "independent state/side-effect oracle",
+        "real adapter evidence for each claimed L2/L3 result"
+      ]
+    },
+    {
+      "id": "STOP-017",
+      "area": "STOP",
+      "title": "停止先于完成回调",
+      "priority": "P0",
+      "status": "PLANNED",
+      "implementationRequired": true,
+      "given": {
+        "fixtureId": "running-tree",
+        "variantId": "STOP-017",
+        "premise": "Stop已提交，worker结果晚到"
+      },
+      "steps": [
+        {
+          "op": "fixture.prepare",
+          "args": {
+            "fixtureId": "running-tree",
+            "variantId": "STOP-017"
+          }
+        },
+        {
+          "op": "fault.inject",
+          "args": {
+            "fault": "late_result_after_stop"
+          }
+        },
+        {
+          "op": "system.observe",
+          "args": {
+            "deadlineMs": 5000,
+            "deadlinePolicy": "driver_must_override_for_declared_long_operations"
+          }
+        }
+      ],
+      "expected": {
+        "narrative": "保存迟到成果，不覆盖停止状态自动Done",
+        "invariants": [
+          "INV05",
+          "INV06",
+          "INV07",
+          "INV08",
+          "INV09",
+          "INV18"
+        ]
+      },
+      "requiredLevels": [
+        "L1",
+        "L2",
+        "L3"
+      ],
+      "evidenceRequired": [
+        "structured event/control trace with stable IDs",
+        "independent state/side-effect oracle",
+        "real adapter evidence for each claimed L2/L3 result"
+      ]
+    },
+    {
+      "id": "STOP-018",
+      "area": "STOP",
+      "title": "离线停止",
+      "priority": "P0",
+      "status": "PLANNED",
+      "implementationRequired": true,
+      "given": {
+        "fixtureId": "running-tree",
+        "variantId": "STOP-018",
+        "premise": "Mac断网，Windows仍工作"
+      },
+      "steps": [
+        {
+          "op": "fixture.prepare",
+          "args": {
+            "fixtureId": "running-tree",
+            "variantId": "STOP-018"
+          }
+        },
+        {
+          "op": "ui.act",
+          "args": {
+            "action": "停止这次工作"
+          }
+        },
+        {
+          "op": "system.observe",
+          "args": {
+            "deadlineMs": 5000,
+            "deadlinePolicy": "driver_must_override_for_declared_long_operations"
+          }
+        }
+      ],
+      "expected": {
+        "narrative": "明确未送达/待确认，不能显示已停止",
+        "invariants": [
+          "INV05",
+          "INV06",
+          "INV07",
+          "INV08",
+          "INV09",
+          "INV18"
+        ]
+      },
+      "requiredLevels": [
+        "L1",
+        "L2",
+        "L3"
+      ],
+      "evidenceRequired": [
+        "structured event/control trace with stable IDs",
+        "independent state/side-effect oracle",
+        "real adapter evidence for each claimed L2/L3 result"
+      ]
+    },
+    {
+      "id": "STOP-019",
+      "area": "STOP",
+      "title": "离线停止重连",
+      "priority": "P0",
+      "status": "PLANNED",
+      "implementationRequired": true,
+      "given": {
+        "fixtureId": "running-tree",
+        "variantId": "STOP-019",
+        "premise": "带明确目标的Stop待送"
+      },
+      "steps": [
+        {
+          "op": "fixture.prepare",
+          "args": {
+            "fixtureId": "running-tree",
+            "variantId": "STOP-019"
+          }
+        },
+        {
+          "op": "fault.inject",
+          "args": {
+            "fault": "reconnect_with_pending_stop"
+          }
+        },
+        {
+          "op": "system.observe",
+          "args": {
+            "deadlineMs": 5000,
+            "deadlinePolicy": "driver_must_override_for_declared_long_operations"
+          }
+        }
+      ],
+      "expected": {
+        "narrative": "幂等送达原目标，不误停后来新工作",
+        "invariants": [
+          "INV05",
+          "INV06",
+          "INV07",
+          "INV08",
+          "INV09",
+          "INV18"
+        ]
+      },
+      "requiredLevels": [
+        "L1",
+        "L2",
+        "L3"
+      ],
+      "evidenceRequired": [
+        "structured event/control trace with stable IDs",
+        "independent state/side-effect oracle",
+        "real adapter evidence for each claimed L2/L3 result"
+      ]
+    },
+    {
+      "id": "STOP-020",
+      "area": "STOP",
+      "title": "暂停并继续",
+      "priority": "P0",
+      "status": "PLANNED",
+      "implementationRequired": true,
+      "given": {
+        "fixtureId": "running-tree",
+        "variantId": "STOP-020",
+        "premise": "R_A有可用检查点"
+      },
+      "steps": [
+        {
+          "op": "fixture.prepare",
+          "args": {
+            "fixtureId": "running-tree",
+            "variantId": "STOP-020"
+          }
+        },
+        {
+          "op": "ui.act",
+          "args": {
+            "action": "暂停后继续"
+          }
+        },
+        {
+          "op": "system.observe",
+          "args": {
+            "deadlineMs": 5000,
+            "deadlinePolicy": "driver_must_override_for_declared_long_operations"
+          }
+        }
+      ],
+      "expected": {
+        "narrative": "按检查点新建关联Run，不重复已完成副作用",
+        "invariants": [
+          "INV05",
+          "INV06",
+          "INV07",
+          "INV08",
+          "INV09",
+          "INV18"
+        ]
+      },
+      "requiredLevels": [
+        "L1",
+        "L2",
+        "L3"
+      ],
+      "evidenceRequired": [
+        "structured event/control trace with stable IDs",
+        "independent state/side-effect oracle",
+        "real adapter evidence for each claimed L2/L3 result"
+      ]
+    },
+    {
+      "id": "STOP-021",
+      "area": "STOP",
+      "title": "停止不是取消卡片",
+      "priority": "P0",
+      "status": "PLANNED",
+      "implementationRequired": true,
+      "given": {
+        "fixtureId": "running-tree",
+        "variantId": "STOP-021",
+        "premise": "R_A被用户停止"
+      },
+      "steps": [
+        {
+          "op": "fixture.prepare",
+          "args": {
+            "fixtureId": "running-tree",
+            "variantId": "STOP-021"
+          }
+        },
+        {
+          "op": "ui.act",
+          "args": {
+            "action": "查看任务卡"
+          }
+        },
+        {
+          "op": "system.observe",
+          "args": {
+            "deadlineMs": 5000,
+            "deadlinePolicy": "driver_must_override_for_declared_long_operations"
+          }
+        }
+      ],
+      "expected": {
+        "narrative": "卡片和部分成果保留，可继续",
+        "invariants": [
+          "INV05",
+          "INV06",
+          "INV07",
+          "INV08",
+          "INV09",
+          "INV18"
+        ]
+      },
+      "requiredLevels": [
+        "L1",
+        "L2",
+        "L3"
+      ],
+      "evidenceRequired": [
+        "structured event/control trace with stable IDs",
+        "independent state/side-effect oracle",
+        "real adapter evidence for each claimed L2/L3 result"
+      ]
+    },
+    {
+      "id": "STOP-022",
+      "area": "STOP",
+      "title": "停止不是回滚",
+      "priority": "P0",
+      "status": "PLANNED",
+      "implementationRequired": true,
+      "given": {
+        "fixtureId": "running-tree",
+        "variantId": "STOP-022",
+        "premise": "已有文件/模拟外部投递已提交"
+      },
+      "steps": [
+        {
+          "op": "fixture.prepare",
+          "args": {
+            "fixtureId": "running-tree",
+            "variantId": "STOP-022"
+          }
+        },
+        {
+          "op": "ui.act",
+          "args": {
+            "action": "停止这次工作"
+          }
+        },
+        {
+          "op": "system.observe",
+          "args": {
+            "deadlineMs": 5000,
+            "deadlinePolicy": "driver_must_override_for_declared_long_operations"
+          }
+        }
+      ],
+      "expected": {
+        "narrative": "不自动删除/撤回，清楚报告已发生动作",
+        "invariants": [
+          "INV05",
+          "INV06",
+          "INV07",
+          "INV08",
+          "INV09",
+          "INV18"
+        ]
+      },
+      "requiredLevels": [
+        "L1",
+        "L2",
+        "L3"
+      ],
+      "evidenceRequired": [
+        "structured event/control trace with stable IDs",
+        "independent state/side-effect oracle",
+        "real adapter evidence for each claimed L2/L3 result"
+      ]
+    },
+    {
+      "id": "STOP-023",
+      "area": "STOP",
+      "title": "闲聊Stop不伤旧任务",
+      "priority": "P0",
+      "status": "PLANNED",
+      "implementationRequired": true,
+      "given": {
+        "fixtureId": "running-tree",
+        "variantId": "STOP-023",
+        "premise": "R_A来自旧意图，新主回合为闲聊"
+      },
+      "steps": [
+        {
+          "op": "fixture.prepare",
+          "args": {
+            "fixtureId": "running-tree",
+            "variantId": "STOP-023"
+          }
+        },
+        {
+          "op": "ui.act",
+          "args": {
+            "action": "停止本次闲聊请求"
+          }
+        },
+        {
+          "op": "system.observe",
+          "args": {
+            "deadlineMs": 5000,
+            "deadlinePolicy": "driver_must_override_for_declared_long_operations"
+          }
+        }
+      ],
+      "expected": {
+        "narrative": "只停止新主回合，R_A继续",
+        "invariants": [
+          "INV05",
+          "INV06",
+          "INV07",
+          "INV08",
+          "INV09",
+          "INV18"
+        ]
+      },
+      "requiredLevels": [
+        "L1",
+        "L2",
+        "L3"
+      ],
+      "evidenceRequired": [
+        "structured event/control trace with stable IDs",
+        "independent state/side-effect oracle",
+        "real adapter evidence for each claimed L2/L3 result"
+      ]
+    },
+    {
+      "id": "STOP-024",
+      "area": "STOP",
+      "title": "多项工作指代含糊",
+      "priority": "P0",
+      "status": "PLANNED",
+      "implementationRequired": true,
+      "given": {
+        "fixtureId": "running-tree",
+        "variantId": "STOP-024",
+        "premise": "A/B同时运行无焦点"
+      },
+      "steps": [
+        {
+          "op": "fixture.prepare",
+          "args": {
+            "fixtureId": "running-tree",
+            "variantId": "STOP-024"
+          }
+        },
+        {
+          "op": "user.say",
+          "args": {
+            "text": "停一下"
+          }
+        },
+        {
+          "op": "system.observe",
+          "args": {
+            "deadlineMs": 5000,
+            "deadlinePolicy": "driver_must_override_for_declared_long_operations"
+          }
+        }
+      ],
+      "expected": {
+        "narrative": "先冻结新派发并澄清范围，不随机杀A或B",
+        "invariants": [
+          "INV05",
+          "INV06",
+          "INV07",
+          "INV08",
+          "INV09",
+          "INV18"
+        ]
+      },
+      "requiredLevels": [
+        "L1",
+        "L2",
+        "L3"
+      ],
+      "evidenceRequired": [
+        "structured event/control trace with stable IDs",
+        "independent state/side-effect oracle",
+        "real adapter evidence for each claimed L2/L3 result"
+      ]
+    },
+    {
+      "id": "APPROVAL-001",
+      "area": "APPROVAL",
+      "title": "主入口批准",
+      "priority": "P0",
+      "status": "PLANNED",
+      "implementationRequired": true,
+      "given": {
+        "fixtureId": "approval-pending",
+        "variantId": "APPROVAL-001",
+        "premise": "worker等待审批"
+      },
+      "steps": [
+        {
+          "op": "fixture.prepare",
+          "args": {
+            "fixtureId": "approval-pending",
+            "variantId": "APPROVAL-001"
+          }
+        },
+        {
+          "op": "ui.act",
+          "args": {
+            "action": "批准当前请求"
+          }
+        },
+        {
+          "op": "system.observe",
+          "args": {
+            "deadlineMs": 5000,
+            "deadlinePolicy": "driver_must_override_for_declared_long_operations"
+          }
+        }
+      ],
+      "expected": {
+        "narrative": "在同一事件/Peer返回，准确启动被批准动作",
+        "invariants": [
+          "INV01",
+          "INV03",
+          "INV10",
+          "INV16"
+        ]
+      },
+      "requiredLevels": [
+        "L1",
+        "L2"
+      ],
+      "evidenceRequired": [
+        "structured event/control trace with stable IDs",
+        "independent state/side-effect oracle",
+        "real adapter evidence for each claimed L2/L3 result"
+      ]
+    },
+    {
+      "id": "APPROVAL-002",
+      "area": "APPROVAL",
+      "title": "主入口拒绝",
+      "priority": "P0",
+      "status": "PLANNED",
+      "implementationRequired": true,
+      "given": {
+        "fixtureId": "approval-pending",
+        "variantId": "APPROVAL-002",
+        "premise": "worker等待外部写审批"
+      },
+      "steps": [
+        {
+          "op": "fixture.prepare",
+          "args": {
+            "fixtureId": "approval-pending",
+            "variantId": "APPROVAL-002"
+          }
+        },
+        {
+          "op": "ui.act",
+          "args": {
+            "action": "拒绝当前请求"
+          }
+        },
+        {
+          "op": "system.observe",
+          "args": {
+            "deadlineMs": 5000,
+            "deadlinePolicy": "driver_must_override_for_declared_long_operations"
+          }
+        }
+      ],
+      "expected": {
+        "narrative": "无该副作用，任务有明确后续状态",
+        "invariants": [
+          "INV01",
+          "INV03",
+          "INV10",
+          "INV16"
+        ]
+      },
+      "requiredLevels": [
+        "L1",
+        "L2"
+      ],
+      "evidenceRequired": [
+        "structured event/control trace with stable IDs",
+        "independent state/side-effect oracle",
+        "real adapter evidence for each claimed L2/L3 result"
+      ]
+    },
+    {
+      "id": "APPROVAL-003",
+      "area": "APPROVAL",
+      "title": "断线后待审批恢复",
+      "priority": "P0",
+      "status": "PLANNED",
+      "implementationRequired": true,
+      "given": {
+        "fixtureId": "approval-pending",
+        "variantId": "APPROVAL-003",
+        "premise": "原请求仍pending"
+      },
+      "steps": [
+        {
+          "op": "fixture.prepare",
+          "args": {
+            "fixtureId": "approval-pending",
+            "variantId": "APPROVAL-003"
+          }
+        },
+        {
+          "op": "fault.inject",
+          "args": {
+            "fault": "reconnect_pending_approval"
+          }
+        },
+        {
+          "op": "system.observe",
+          "args": {
+            "deadlineMs": 5000,
+            "deadlinePolicy": "driver_must_override_for_declared_long_operations"
+          }
+        }
+      ],
+      "expected": {
+        "narrative": "相同事件ID恢复，旧按钮不重复生效",
+        "invariants": [
+          "INV01",
+          "INV03",
+          "INV10",
+          "INV16"
+        ]
+      },
+      "requiredLevels": [
+        "L1",
+        "L2"
+      ],
+      "evidenceRequired": [
+        "structured event/control trace with stable IDs",
+        "independent state/side-effect oracle",
+        "real adapter evidence for each claimed L2/L3 result"
+      ]
+    },
+    {
+      "id": "APPROVAL-004",
+      "area": "APPROVAL",
+      "title": "两端同时回答",
+      "priority": "P0",
+      "status": "PLANNED",
+      "implementationRequired": true,
+      "given": {
+        "fixtureId": "approval-pending",
+        "variantId": "APPROVAL-004",
+        "premise": "Windows/Mac均可见问题"
+      },
+      "steps": [
+        {
+          "op": "fixture.prepare",
+          "args": {
+            "fixtureId": "approval-pending",
+            "variantId": "APPROVAL-004"
+          }
+        },
+        {
+          "op": "fault.inject",
+          "args": {
+            "fault": "concurrent_conflicting_answers"
+          }
+        },
+        {
+          "op": "system.observe",
+          "args": {
+            "deadlineMs": 5000,
+            "deadlinePolicy": "driver_must_override_for_declared_long_operations"
+          }
+        }
+      ],
+      "expected": {
+        "narrative": "一个权威结果，另端显示已处理",
+        "invariants": [
+          "INV01",
+          "INV03",
+          "INV10",
+          "INV16"
+        ]
+      },
+      "requiredLevels": [
+        "L1",
+        "L2"
+      ],
+      "evidenceRequired": [
+        "structured event/control trace with stable IDs",
+        "independent state/side-effect oracle",
+        "real adapter evidence for each claimed L2/L3 result"
+      ]
+    },
+    {
+      "id": "APPROVAL-005",
+      "area": "APPROVAL",
+      "title": "停止后批准晚到",
+      "priority": "P0",
+      "status": "PLANNED",
+      "implementationRequired": true,
+      "given": {
+        "fixtureId": "approval-pending",
+        "variantId": "APPROVAL-005",
+        "premise": "Stop先提交"
+      },
+      "steps": [
+        {
+          "op": "fixture.prepare",
+          "args": {
+            "fixtureId": "approval-pending",
+            "variantId": "APPROVAL-005"
+          }
+        },
+        {
+          "op": "fault.inject",
+          "args": {
+            "fault": "approval_after_stop"
+          }
+        },
+        {
+          "op": "system.observe",
+          "args": {
+            "deadlineMs": 5000,
+            "deadlinePolicy": "driver_must_override_for_declared_long_operations"
+          }
+        }
+      ],
+      "expected": {
+        "narrative": "拒绝迟到批准，不派发动作",
+        "invariants": [
+          "INV01",
+          "INV03",
+          "INV10",
+          "INV16"
+        ]
+      },
+      "requiredLevels": [
+        "L1",
+        "L2"
+      ],
+      "evidenceRequired": [
+        "structured event/control trace with stable IDs",
+        "independent state/side-effect oracle",
+        "real adapter evidence for each claimed L2/L3 result"
+      ]
+    },
+    {
+      "id": "APPROVAL-006",
+      "area": "APPROVAL",
+      "title": "问题回答更正",
+      "priority": "P0",
+      "status": "PLANNED",
+      "implementationRequired": true,
+      "given": {
+        "fixtureId": "approval-pending",
+        "variantId": "APPROVAL-006",
+        "premise": "答案尚未消费"
+      },
+      "steps": [
+        {
+          "op": "fixture.prepare",
+          "args": {
+            "fixtureId": "approval-pending",
+            "variantId": "APPROVAL-006"
+          }
+        },
+        {
+          "op": "user.say",
+          "args": {
+            "text": "刚才选错了，改成第二个"
+          }
+        },
+        {
+          "op": "system.observe",
+          "args": {
+            "deadlineMs": 5000,
+            "deadlinePolicy": "driver_must_override_for_declared_long_operations"
+          }
+        }
+      ],
+      "expected": {
+        "narrative": "可编辑或明确已消费，不静默重复回答",
+        "invariants": [
+          "INV01",
+          "INV03",
+          "INV10",
+          "INV16"
+        ]
+      },
+      "requiredLevels": [
+        "L1",
+        "L2"
+      ],
+      "evidenceRequired": [
+        "structured event/control trace with stable IDs",
+        "independent state/side-effect oracle",
+        "real adapter evidence for each claimed L2/L3 result"
+      ]
+    },
+    {
+      "id": "APPROVAL-007",
+      "area": "APPROVAL",
+      "title": "主助理轮换待提问",
+      "priority": "P0",
+      "status": "PLANNED",
+      "implementationRequired": true,
+      "given": {
+        "fixtureId": "approval-pending",
+        "variantId": "APPROVAL-007",
+        "premise": "worker问题未答"
+      },
+      "steps": [
+        {
+          "op": "fixture.prepare",
+          "args": {
+            "fixtureId": "approval-pending",
+            "variantId": "APPROVAL-007"
+          }
+        },
+        {
+          "op": "fault.inject",
+          "args": {
+            "fault": "rotate_with_pending_question"
+          }
+        },
+        {
+          "op": "system.observe",
+          "args": {
+            "deadlineMs": 5000,
+            "deadlinePolicy": "driver_must_override_for_declared_long_operations"
+          }
+        }
+      ],
+      "expected": {
+        "narrative": "主入口仍显示原问题，答案不丢",
+        "invariants": [
+          "INV01",
+          "INV03",
+          "INV10",
+          "INV16"
+        ]
+      },
+      "requiredLevels": [
+        "L1",
+        "L2"
+      ],
+      "evidenceRequired": [
+        "structured event/control trace with stable IDs",
+        "independent state/side-effect oracle",
+        "real adapter evidence for each claimed L2/L3 result"
+      ]
+    },
+    {
+      "id": "APPROVAL-008",
+      "area": "APPROVAL",
+      "title": "部分授权",
+      "priority": "P0",
+      "status": "PLANNED",
+      "implementationRequired": true,
+      "given": {
+        "fixtureId": "approval-pending",
+        "variantId": "APPROVAL-008",
+        "premise": "批次含内务整理和外发"
+      },
+      "steps": [
+        {
+          "op": "fixture.prepare",
+          "args": {
+            "fixtureId": "approval-pending",
+            "variantId": "APPROVAL-008"
+          }
+        },
+        {
+          "op": "user.say",
+          "args": {
+            "text": "整理可以，发送邮件先别做"
+          }
+        },
+        {
+          "op": "system.observe",
+          "args": {
+            "deadlineMs": 5000,
+            "deadlinePolicy": "driver_must_override_for_declared_long_operations"
+          }
+        }
+      ],
+      "expected": {
+        "narrative": "只执行授权部分，外发保持待确认",
+        "invariants": [
+          "INV01",
+          "INV03",
+          "INV10",
+          "INV16"
+        ]
+      },
+      "requiredLevels": [
+        "L1",
+        "L2"
+      ],
+      "evidenceRequired": [
+        "structured event/control trace with stable IDs",
+        "independent state/side-effect oracle",
+        "real adapter evidence for each claimed L2/L3 result"
+      ]
+    },
+    {
+      "id": "APPROVAL-009",
+      "area": "APPROVAL",
+      "title": "缺资料",
+      "priority": "P0",
+      "status": "PLANNED",
+      "implementationRequired": true,
+      "given": {
+        "fixtureId": "approval-pending",
+        "variantId": "APPROVAL-009",
+        "premise": "报告需要用户提供附件"
+      },
+      "steps": [
+        {
+          "op": "fixture.prepare",
+          "args": {
+            "fixtureId": "approval-pending",
+            "variantId": "APPROVAL-009"
+          }
+        },
+        {
+          "op": "user.say",
+          "args": {
+            "text": "资料我明天再给，你先放着"
+          }
+        },
+        {
+          "op": "system.observe",
+          "args": {
+            "deadlineMs": 5000,
+            "deadlinePolicy": "driver_must_override_for_declared_long_operations"
+          }
+        }
+      ],
+      "expected": {
+        "narrative": "持久等待，日后恢复不反复追问",
+        "invariants": [
+          "INV01",
+          "INV03",
+          "INV10",
+          "INV16"
+        ]
+      },
+      "requiredLevels": [
+        "L1",
+        "L2"
+      ],
+      "evidenceRequired": [
+        "structured event/control trace with stable IDs",
+        "independent state/side-effect oracle",
+        "real adapter evidence for each claimed L2/L3 result"
+      ]
+    },
+    {
+      "id": "APPROVAL-010",
+      "area": "APPROVAL",
+      "title": "审批目标显示",
+      "priority": "P0",
+      "status": "PLANNED",
+      "implementationRequired": true,
+      "given": {
+        "fixtureId": "approval-pending",
+        "variantId": "APPROVAL-010",
+        "premise": "两个项目有相似工具请求"
+      },
+      "steps": [
+        {
+          "op": "fixture.prepare",
+          "args": {
+            "fixtureId": "approval-pending",
+            "variantId": "APPROVAL-010"
+          }
+        },
+        {
+          "op": "ui.act",
+          "args": {
+            "action": "查看审批详情"
+          }
+        },
+        {
+          "op": "system.observe",
+          "args": {
+            "deadlineMs": 5000,
+            "deadlinePolicy": "driver_must_override_for_declared_long_operations"
+          }
+        }
+      ],
+      "expected": {
+        "narrative": "显示正确项目、动作和范围，不能只给无来源按钮",
+        "invariants": [
+          "INV01",
+          "INV03",
+          "INV10",
+          "INV16"
+        ]
+      },
+      "requiredLevels": [
+        "L1",
+        "L2"
+      ],
+      "evidenceRequired": [
+        "structured event/control trace with stable IDs",
+        "independent state/side-effect oracle",
+        "real adapter evidence for each claimed L2/L3 result"
+      ]
+    },
+    {
+      "id": "CONTEXT-001",
+      "area": "CONTEXT",
+      "title": "主动压缩",
+      "priority": "P0",
+      "status": "PLANNED",
+      "implementationRequired": true,
+      "given": {
+        "fixtureId": "memory-pressure",
+        "variantId": "CONTEXT-001",
+        "premise": "主Session接近预算"
+      },
+      "steps": [
+        {
+          "op": "fixture.prepare",
+          "args": {
+            "fixtureId": "memory-pressure",
+            "variantId": "CONTEXT-001"
+          }
+        },
+        {
+          "op": "ui.act",
+          "args": {
+            "action": "继续当前工作"
+          }
+        },
+        {
+          "op": "system.observe",
+          "args": {
+            "deadlineMs": 5000,
+            "deadlinePolicy": "driver_must_override_for_declared_long_operations"
+          }
+        }
+      ],
+      "expected": {
+        "narrative": "原生压缩/按需加载，不要求用户抄总结",
+        "invariants": [
+          "INV02",
+          "INV12",
+          "INV13",
+          "INV16"
+        ]
+      },
+      "requiredLevels": [
+        "L1",
+        "L2"
+      ],
+      "evidenceRequired": [
+        "structured event/control trace with stable IDs",
+        "independent state/side-effect oracle",
+        "real adapter evidence for each claimed L2/L3 result"
+      ]
+    },
+    {
+      "id": "CONTEXT-002",
+      "area": "CONTEXT",
+      "title": "无缝轮换",
+      "priority": "P0",
+      "status": "PLANNED",
+      "implementationRequired": true,
+      "given": {
+        "fixtureId": "memory-pressure",
+        "variantId": "CONTEXT-002",
+        "premise": "安全边界且预算不足"
+      },
+      "steps": [
+        {
+          "op": "fixture.prepare",
+          "args": {
+            "fixtureId": "memory-pressure",
+            "variantId": "CONTEXT-002"
+          }
+        },
+        {
+          "op": "ui.act",
+          "args": {
+            "action": "整理上下文"
+          }
+        },
+        {
+          "op": "system.observe",
+          "args": {
+            "deadlineMs": 5000,
+            "deadlinePolicy": "driver_must_override_for_declared_long_operations"
+          }
+        }
+      ],
+      "expected": {
+        "narrative": "真实新Session激活后切绑定，逻辑入口不变",
+        "invariants": [
+          "INV02",
+          "INV12",
+          "INV13",
+          "INV16"
+        ]
+      },
+      "requiredLevels": [
+        "L1",
+        "L2"
+      ],
+      "evidenceRequired": [
+        "structured event/control trace with stable IDs",
+        "independent state/side-effect oracle",
+        "real adapter evidence for each claimed L2/L3 result"
+      ]
+    },
+    {
+      "id": "CONTEXT-003",
+      "area": "CONTEXT",
+      "title": "轮换中输入",
+      "priority": "P0",
+      "status": "PLANNED",
+      "implementationRequired": true,
+      "given": {
+        "fixtureId": "memory-pressure",
+        "variantId": "CONTEXT-003",
+        "premise": "切换开始时用户发消息"
+      },
+      "steps": [
+        {
+          "op": "fixture.prepare",
+          "args": {
+            "fixtureId": "memory-pressure",
+            "variantId": "CONTEXT-003"
+          }
+        },
+        {
+          "op": "user.say",
+          "args": {
+            "text": "补充一下，预算不要超过五百"
+          }
+        },
+        {
+          "op": "system.observe",
+          "args": {
+            "deadlineMs": 5000,
+            "deadlinePolicy": "driver_must_override_for_declared_long_operations"
+          }
+        }
+      ],
+      "expected": {
+        "narrative": "输入进入持久队列，恰好被正确消费",
+        "invariants": [
+          "INV02",
+          "INV12",
+          "INV13",
+          "INV16"
+        ]
+      },
+      "requiredLevels": [
+        "L1",
+        "L2"
+      ],
+      "evidenceRequired": [
+        "structured event/control trace with stable IDs",
+        "independent state/side-effect oracle",
+        "real adapter evidence for each claimed L2/L3 result"
+      ]
+    },
+    {
+      "id": "CONTEXT-004",
+      "area": "CONTEXT",
+      "title": "轮换中结果",
+      "priority": "P0",
+      "status": "PLANNED",
+      "implementationRequired": true,
+      "given": {
+        "fixtureId": "memory-pressure",
+        "variantId": "CONTEXT-004",
+        "premise": "worker完成时主Session切换"
+      },
+      "steps": [
+        {
+          "op": "fixture.prepare",
+          "args": {
+            "fixtureId": "memory-pressure",
+            "variantId": "CONTEXT-004"
+          }
+        },
+        {
+          "op": "fault.inject",
+          "args": {
+            "fault": "worker_result_during_rotation"
+          }
+        },
+        {
+          "op": "system.observe",
+          "args": {
+            "deadlineMs": 5000,
+            "deadlinePolicy": "driver_must_override_for_declared_long_operations"
+          }
+        }
+      ],
+      "expected": {
+        "narrative": "Outbox投递到当前入口，不重复或丢失",
+        "invariants": [
+          "INV02",
+          "INV12",
+          "INV13",
+          "INV16"
+        ]
+      },
+      "requiredLevels": [
+        "L1",
+        "L2"
+      ],
+      "evidenceRequired": [
+        "structured event/control trace with stable IDs",
+        "independent state/side-effect oracle",
+        "real adapter evidence for each claimed L2/L3 result"
+      ]
+    },
+    {
+      "id": "CONTEXT-005",
+      "area": "CONTEXT",
+      "title": "轮换中Stop",
+      "priority": "P0",
+      "status": "PLANNED",
+      "implementationRequired": true,
+      "given": {
+        "fixtureId": "memory-pressure",
+        "variantId": "CONTEXT-005",
+        "premise": "后台R_A工作"
+      },
+      "steps": [
+        {
+          "op": "fixture.prepare",
+          "args": {
+            "fixtureId": "memory-pressure",
+            "variantId": "CONTEXT-005"
+          }
+        },
+        {
+          "op": "ui.act",
+          "args": {
+            "action": "轮换期间停止R_A"
+          }
+        },
+        {
+          "op": "system.observe",
+          "args": {
+            "deadlineMs": 5000,
+            "deadlinePolicy": "driver_must_override_for_declared_long_operations"
+          }
+        }
+      ],
+      "expected": {
+        "narrative": "独立控制仍可用，不依赖主Session",
+        "invariants": [
+          "INV02",
+          "INV12",
+          "INV13",
+          "INV16"
+        ]
+      },
+      "requiredLevels": [
+        "L1",
+        "L2"
+      ],
+      "evidenceRequired": [
+        "structured event/control trace with stable IDs",
+        "independent state/side-effect oracle",
+        "real adapter evidence for each claimed L2/L3 result"
+      ]
+    },
+    {
+      "id": "CONTEXT-006",
+      "area": "CONTEXT",
+      "title": "旧摘要冲突",
+      "priority": "P0",
+      "status": "PLANNED",
+      "implementationRequired": true,
+      "given": {
+        "fixtureId": "memory-pressure",
+        "variantId": "CONTEXT-006",
+        "premise": "项目真实revision更新"
+      },
+      "steps": [
+        {
+          "op": "fixture.prepare",
+          "args": {
+            "fixtureId": "memory-pressure",
+            "variantId": "CONTEXT-006"
+          }
+        },
+        {
+          "op": "user.say",
+          "args": {
+            "text": "继续按最新的版本做"
+          }
+        },
+        {
+          "op": "system.observe",
+          "args": {
+            "deadlineMs": 5000,
+            "deadlinePolicy": "driver_must_override_for_declared_long_operations"
+          }
+        }
+      ],
+      "expected": {
+        "narrative": "回读新事实，旧摘要不覆盖",
+        "invariants": [
+          "INV02",
+          "INV12",
+          "INV13",
+          "INV16"
+        ]
+      },
+      "requiredLevels": [
+        "L1",
+        "L2"
+      ],
+      "evidenceRequired": [
+        "structured event/control trace with stable IDs",
+        "independent state/side-effect oracle",
+        "real adapter evidence for each claimed L2/L3 result"
+      ]
+    },
+    {
+      "id": "CONTEXT-007",
+      "area": "CONTEXT",
+      "title": "跨项目保密",
+      "priority": "P0",
+      "status": "PLANNED",
+      "implementationRequired": true,
+      "given": {
+        "fixtureId": "memory-pressure",
+        "variantId": "CONTEXT-007",
+        "premise": "P_A有不相关私人材料"
+      },
+      "steps": [
+        {
+          "op": "fixture.prepare",
+          "args": {
+            "fixtureId": "memory-pressure",
+            "variantId": "CONTEXT-007"
+          }
+        },
+        {
+          "op": "user.say",
+          "args": {
+            "text": "推进P_B的公开宣传文案"
+          }
+        },
+        {
+          "op": "system.observe",
+          "args": {
+            "deadlineMs": 5000,
+            "deadlinePolicy": "driver_must_override_for_declared_long_operations"
+          }
+        }
+      ],
+      "expected": {
+        "narrative": "不把P_A私人原文注入P_B",
+        "invariants": [
+          "INV02",
+          "INV12",
+          "INV13",
+          "INV16"
+        ]
+      },
+      "requiredLevels": [
+        "L1",
+        "L2"
+      ],
+      "evidenceRequired": [
+        "structured event/control trace with stable IDs",
+        "independent state/side-effect oracle",
+        "real adapter evidence for each claimed L2/L3 result"
+      ]
+    },
+    {
+      "id": "CONTEXT-008",
+      "area": "CONTEXT",
+      "title": "长期偏好纠正",
+      "priority": "P0",
+      "status": "PLANNED",
+      "implementationRequired": true,
+      "given": {
+        "fixtureId": "memory-pressure",
+        "variantId": "CONTEXT-008",
+        "premise": "旧偏好被用户明确改正"
+      },
+      "steps": [
+        {
+          "op": "fixture.prepare",
+          "args": {
+            "fixtureId": "memory-pressure",
+            "variantId": "CONTEXT-008"
+          }
+        },
+        {
+          "op": "user.say",
+          "args": {
+            "text": "以后简报别写那么长，两段就好"
+          }
+        },
+        {
+          "op": "system.observe",
+          "args": {
+            "deadlineMs": 5000,
+            "deadlinePolicy": "driver_must_override_for_declared_long_operations"
+          }
+        }
+      ],
+      "expected": {
+        "narrative": "有来源更新偏好，新回合可用，旧版可追溯",
+        "invariants": [
+          "INV02",
+          "INV12",
+          "INV13",
+          "INV16"
+        ]
+      },
+      "requiredLevels": [
+        "L1",
+        "L2"
+      ],
+      "evidenceRequired": [
+        "structured event/control trace with stable IDs",
+        "independent state/side-effect oracle",
+        "real adapter evidence for each claimed L2/L3 result"
+      ]
+    },
+    {
+      "id": "CONTEXT-009",
+      "area": "CONTEXT",
+      "title": "找回旧成果",
+      "priority": "P0",
+      "status": "PLANNED",
+      "implementationRequired": true,
+      "given": {
+        "fixtureId": "memory-pressure",
+        "variantId": "CONTEXT-009",
+        "premise": "主入口已换过Session"
+      },
+      "steps": [
+        {
+          "op": "fixture.prepare",
+          "args": {
+            "fixtureId": "memory-pressure",
+            "variantId": "CONTEXT-009"
+          }
+        },
+        {
+          "op": "user.say",
+          "args": {
+            "text": "上次那份会议清单放哪了"
+          }
+        },
+        {
+          "op": "system.observe",
+          "args": {
+            "deadlineMs": 5000,
+            "deadlinePolicy": "driver_must_override_for_declared_long_operations"
+          }
+        }
+      ],
+      "expected": {
+        "narrative": "按任务/成果引用检索，不编造文件路径",
+        "invariants": [
+          "INV02",
+          "INV12",
+          "INV13",
+          "INV16"
+        ]
+      },
+      "requiredLevels": [
+        "L1",
+        "L2"
+      ],
+      "evidenceRequired": [
+        "structured event/control trace with stable IDs",
+        "independent state/side-effect oracle",
+        "real adapter evidence for each claimed L2/L3 result"
+      ]
+    },
+    {
+      "id": "CONTEXT-010",
+      "area": "CONTEXT",
+      "title": "轮换中断恢复",
+      "priority": "P0",
+      "status": "PLANNED",
+      "implementationRequired": true,
+      "given": {
+        "fixtureId": "memory-pressure",
+        "variantId": "CONTEXT-010",
+        "premise": "绑定切换事务中Host崩溃"
+      },
+      "steps": [
+        {
+          "op": "fixture.prepare",
+          "args": {
+            "fixtureId": "memory-pressure",
+            "variantId": "CONTEXT-010"
+          }
+        },
+        {
+          "op": "fault.inject",
+          "args": {
+            "fault": "restart_mid_rotation"
+          }
+        },
+        {
+          "op": "system.observe",
+          "args": {
+            "deadlineMs": 5000,
+            "deadlinePolicy": "driver_must_override_for_declared_long_operations"
+          }
+        }
+      ],
+      "expected": {
+        "narrative": "恢复同一意图和有效绑定，不创建无限新Session",
+        "invariants": [
+          "INV02",
+          "INV12",
+          "INV13",
+          "INV16"
+        ]
+      },
+      "requiredLevels": [
+        "L1",
+        "L2"
+      ],
+      "evidenceRequired": [
+        "structured event/control trace with stable IDs",
+        "independent state/side-effect oracle",
+        "real adapter evidence for each claimed L2/L3 result"
+      ]
+    },
+    {
+      "id": "NETWORK-001",
+      "area": "NETWORK",
+      "title": "Mac断网继续执行",
+      "priority": "P0",
+      "status": "PLANNED",
+      "implementationRequired": true,
+      "given": {
+        "fixtureId": "remote-online",
+        "variantId": "NETWORK-001",
+        "premise": "R_A已受理"
+      },
+      "steps": [
+        {
+          "op": "fixture.prepare",
+          "args": {
+            "fixtureId": "remote-online",
+            "variantId": "NETWORK-001"
+          }
+        },
+        {
+          "op": "fault.inject",
+          "args": {
+            "fault": "disconnect_mac"
+          }
+        },
+        {
+          "op": "system.observe",
+          "args": {
+            "deadlineMs": 5000,
+            "deadlinePolicy": "driver_must_override_for_declared_long_operations"
+          }
+        }
+      ],
+      "expected": {
+        "narrative": "Windows继续，UI显示离线不清零后台",
+        "invariants": [
+          "INV01",
+          "INV02",
+          "INV03",
+          "INV14"
+        ]
+      },
+      "requiredLevels": [
+        "L1",
+        "L2",
+        "L3"
+      ],
+      "evidenceRequired": [
+        "structured event/control trace with stable IDs",
+        "independent state/side-effect oracle",
+        "real adapter evidence for each claimed L2/L3 result"
+      ]
+    },
+    {
+      "id": "NETWORK-002",
+      "area": "NETWORK",
+      "title": "Mac重连追赶",
+      "priority": "P0",
+      "status": "PLANNED",
+      "implementationRequired": true,
+      "given": {
+        "fixtureId": "remote-online",
+        "variantId": "NETWORK-002",
+        "premise": "离线期间状态变化"
+      },
+      "steps": [
+        {
+          "op": "fixture.prepare",
+          "args": {
+            "fixtureId": "remote-online",
+            "variantId": "NETWORK-002"
+          }
+        },
+        {
+          "op": "fault.inject",
+          "args": {
+            "fault": "reconnect_mac"
+          }
+        },
+        {
+          "op": "system.observe",
+          "args": {
+            "deadlineMs": 5000,
+            "deadlinePolicy": "driver_must_override_for_declared_long_operations"
+          }
+        }
+      ],
+      "expected": {
+        "narrative": "追赶相同任务/Run/Session与新成果",
+        "invariants": [
+          "INV01",
+          "INV02",
+          "INV03",
+          "INV14"
+        ]
+      },
+      "requiredLevels": [
+        "L1",
+        "L2",
+        "L3"
+      ],
+      "evidenceRequired": [
+        "structured event/control trace with stable IDs",
+        "independent state/side-effect oracle",
+        "real adapter evidence for each claimed L2/L3 result"
+      ]
+    },
+    {
+      "id": "NETWORK-003",
+      "area": "NETWORK",
+      "title": "Mac合盖",
+      "priority": "P0",
+      "status": "PLANNED",
+      "implementationRequired": true,
+      "given": {
+        "fixtureId": "remote-online",
+        "variantId": "NETWORK-003",
+        "premise": "后台任务运行"
+      },
+      "steps": [
+        {
+          "op": "fixture.prepare",
+          "args": {
+            "fixtureId": "remote-online",
+            "variantId": "NETWORK-003"
+          }
+        },
+        {
+          "op": "ui.act",
+          "args": {
+            "action": "Mac合盖后恢复"
+          }
+        },
+        {
+          "op": "system.observe",
+          "args": {
+            "deadlineMs": 5000,
+            "deadlinePolicy": "driver_must_override_for_declared_long_operations"
+          }
+        }
+      ],
+      "expected": {
+        "narrative": "不取消Windows任务，恢复原入口",
+        "invariants": [
+          "INV01",
+          "INV02",
+          "INV03",
+          "INV14"
+        ]
+      },
+      "requiredLevels": [
+        "L1",
+        "L2",
+        "L3"
+      ],
+      "evidenceRequired": [
+        "structured event/control trace with stable IDs",
+        "independent state/side-effect oracle",
+        "real adapter evidence for each claimed L2/L3 result"
+      ]
+    },
+    {
+      "id": "NETWORK-004",
+      "area": "NETWORK",
+      "title": "Mac退出软件",
+      "priority": "P0",
+      "status": "PLANNED",
+      "implementationRequired": true,
+      "given": {
+        "fixtureId": "remote-online",
+        "variantId": "NETWORK-004",
+        "premise": "R_A仍运行"
+      },
+      "steps": [
+        {
+          "op": "fixture.prepare",
+          "args": {
+            "fixtureId": "remote-online",
+            "variantId": "NETWORK-004"
+          }
+        },
+        {
+          "op": "ui.act",
+          "args": {
+            "action": "退出MacDSH再打开"
+          }
+        },
+        {
+          "op": "system.observe",
+          "args": {
+            "deadlineMs": 5000,
+            "deadlinePolicy": "driver_must_override_for_declared_long_operations"
+          }
+        }
+      ],
+      "expected": {
+        "narrative": "连接与原任务恢复，工作继续",
+        "invariants": [
+          "INV01",
+          "INV02",
+          "INV03",
+          "INV14"
+        ]
+      },
+      "requiredLevels": [
+        "L1",
+        "L2",
+        "L3"
+      ],
+      "evidenceRequired": [
+        "structured event/control trace with stable IDs",
+        "independent state/side-effect oracle",
+        "real adapter evidence for each claimed L2/L3 result"
+      ]
+    },
+    {
+      "id": "NETWORK-005",
+      "area": "NETWORK",
+      "title": "切换网络",
+      "priority": "P0",
+      "status": "PLANNED",
+      "implementationRequired": true,
+      "given": {
+        "fixtureId": "remote-online",
+        "variantId": "NETWORK-005",
+        "premise": "WiFi变热点"
+      },
+      "steps": [
+        {
+          "op": "fixture.prepare",
+          "args": {
+            "fixtureId": "remote-online",
+            "variantId": "NETWORK-005"
+          }
+        },
+        {
+          "op": "fault.inject",
+          "args": {
+            "fault": "switch_client_network"
+          }
+        },
+        {
+          "op": "system.observe",
+          "args": {
+            "deadlineMs": 5000,
+            "deadlinePolicy": "driver_must_override_for_declared_long_operations"
+          }
+        }
+      ],
+      "expected": {
+        "narrative": "端点可达时恢复，不可达明确离线",
+        "invariants": [
+          "INV01",
+          "INV02",
+          "INV03",
+          "INV14"
+        ]
+      },
+      "requiredLevels": [
+        "L1",
+        "L2",
+        "L3"
+      ],
+      "evidenceRequired": [
+        "structured event/control trace with stable IDs",
+        "independent state/side-effect oracle",
+        "real adapter evidence for each claimed L2/L3 result"
+      ]
+    },
+    {
+      "id": "NETWORK-006",
+      "area": "NETWORK",
+      "title": "设备撤销",
+      "priority": "P0",
+      "status": "PLANNED",
+      "implementationRequired": true,
+      "given": {
+        "fixtureId": "remote-online",
+        "variantId": "NETWORK-006",
+        "premise": "Windows撤销Mac凭据"
+      },
+      "steps": [
+        {
+          "op": "fixture.prepare",
+          "args": {
+            "fixtureId": "remote-online",
+            "variantId": "NETWORK-006"
+          }
+        },
+        {
+          "op": "fault.inject",
+          "args": {
+            "fault": "revoke_device"
+          }
+        },
+        {
+          "op": "system.observe",
+          "args": {
+            "deadlineMs": 5000,
+            "deadlinePolicy": "driver_must_override_for_declared_long_operations"
+          }
+        }
+      ],
+      "expected": {
+        "narrative": "拒绝后续调用，不泄露秘密或本地回退",
+        "invariants": [
+          "INV01",
+          "INV02",
+          "INV03",
+          "INV14"
+        ]
+      },
+      "requiredLevels": [
+        "L1",
+        "L2",
+        "L3"
+      ],
+      "evidenceRequired": [
+        "structured event/control trace with stable IDs",
+        "independent state/side-effect oracle",
+        "real adapter evidence for each claimed L2/L3 result"
+      ]
+    },
+    {
+      "id": "NETWORK-007",
+      "area": "NETWORK",
+      "title": "错误Host",
+      "priority": "P0",
+      "status": "PLANNED",
+      "implementationRequired": true,
+      "given": {
+        "fixtureId": "remote-online",
+        "variantId": "NETWORK-007",
+        "premise": "保存地址指向不同hostId"
+      },
+      "steps": [
+        {
+          "op": "fixture.prepare",
+          "args": {
+            "fixtureId": "remote-online",
+            "variantId": "NETWORK-007"
+          }
+        },
+        {
+          "op": "fault.inject",
+          "args": {
+            "fault": "host_identity_mismatch"
+          }
+        },
+        {
+          "op": "system.observe",
+          "args": {
+            "deadlineMs": 5000,
+            "deadlinePolicy": "driver_must_override_for_declared_long_operations"
+          }
+        }
+      ],
+      "expected": {
+        "narrative": "明确阻塞，不把同名项目视为原项目",
+        "invariants": [
+          "INV01",
+          "INV02",
+          "INV03",
+          "INV14"
+        ]
+      },
+      "requiredLevels": [
+        "L1",
+        "L2",
+        "L3"
+      ],
+      "evidenceRequired": [
+        "structured event/control trace with stable IDs",
+        "independent state/side-effect oracle",
+        "real adapter evidence for each claimed L2/L3 result"
+      ]
+    },
+    {
+      "id": "NETWORK-008",
+      "area": "NETWORK",
+      "title": "迟到旧响应",
+      "priority": "P0",
+      "status": "PLANNED",
+      "implementationRequired": true,
+      "given": {
+        "fixtureId": "remote-online",
+        "variantId": "NETWORK-008",
+        "premise": "用户切换连接后旧请求完成"
+      },
+      "steps": [
+        {
+          "op": "fixture.prepare",
+          "args": {
+            "fixtureId": "remote-online",
+            "variantId": "NETWORK-008"
+          }
+        },
+        {
+          "op": "fault.inject",
+          "args": {
+            "fault": "late_old_generation_response"
+          }
+        },
+        {
+          "op": "system.observe",
+          "args": {
+            "deadlineMs": 5000,
+            "deadlinePolicy": "driver_must_override_for_declared_long_operations"
+          }
+        }
+      ],
+      "expected": {
+        "narrative": "丢弃旧数据，不污染当前连接",
+        "invariants": [
+          "INV01",
+          "INV02",
+          "INV03",
+          "INV14"
+        ]
+      },
+      "requiredLevels": [
+        "L1",
+        "L2",
+        "L3"
+      ],
+      "evidenceRequired": [
+        "structured event/control trace with stable IDs",
+        "independent state/side-effect oracle",
+        "real adapter evidence for each claimed L2/L3 result"
+      ]
+    },
+    {
+      "id": "NETWORK-009",
+      "area": "NETWORK",
+      "title": "双端编辑",
+      "priority": "P0",
+      "status": "PLANNED",
+      "implementationRequired": true,
+      "given": {
+        "fixtureId": "remote-online",
+        "variantId": "NETWORK-009",
+        "premise": "Windows/Mac同时改同一卡"
+      },
+      "steps": [
+        {
+          "op": "fixture.prepare",
+          "args": {
+            "fixtureId": "remote-online",
+            "variantId": "NETWORK-009"
+          }
+        },
+        {
+          "op": "fault.inject",
+          "args": {
+            "fault": "concurrent_revision_update"
+          }
+        },
+        {
+          "op": "system.observe",
+          "args": {
+            "deadlineMs": 5000,
+            "deadlinePolicy": "driver_must_override_for_declared_long_operations"
+          }
+        }
+      ],
+      "expected": {
+        "narrative": "CAS冲突可见，不丢更新",
+        "invariants": [
+          "INV01",
+          "INV02",
+          "INV03",
+          "INV14"
+        ]
+      },
+      "requiredLevels": [
+        "L1",
+        "L2",
+        "L3"
+      ],
+      "evidenceRequired": [
+        "structured event/control trace with stable IDs",
+        "independent state/side-effect oracle",
+        "real adapter evidence for each claimed L2/L3 result"
+      ]
+    },
+    {
+      "id": "NETWORK-010",
+      "area": "NETWORK",
+      "title": "能力不兼容",
+      "priority": "P0",
+      "status": "PLANNED",
+      "implementationRequired": true,
+      "given": {
+        "fixtureId": "remote-online",
+        "variantId": "NETWORK-010",
+        "premise": "远程端缺工作台stream/审批能力"
+      },
+      "steps": [
+        {
+          "op": "fixture.prepare",
+          "args": {
+            "fixtureId": "remote-online",
+            "variantId": "NETWORK-010"
+          }
+        },
+        {
+          "op": "ui.act",
+          "args": {
+            "action": "连接旧版本Host"
+          }
+        },
+        {
+          "op": "system.observe",
+          "args": {
+            "deadlineMs": 5000,
+            "deadlinePolicy": "driver_must_override_for_declared_long_operations"
+          }
+        }
+      ],
+      "expected": {
+        "narrative": "明确不支持，不能假ready或本地执行",
+        "invariants": [
+          "INV01",
+          "INV02",
+          "INV03",
+          "INV14"
+        ]
+      },
+      "requiredLevels": [
+        "L1",
+        "L2",
+        "L3"
+      ],
+      "evidenceRequired": [
+        "structured event/control trace with stable IDs",
+        "independent state/side-effect oracle",
+        "real adapter evidence for each claimed L2/L3 result"
+      ]
+    },
+    {
+      "id": "RECOVERY-001",
+      "area": "RECOVERY",
+      "title": "领取前崩溃",
+      "priority": "P0",
+      "status": "PLANNED",
+      "implementationRequired": true,
+      "given": {
+        "fixtureId": "crash-cutpoint",
+        "variantId": "RECOVERY-001",
+        "premise": "队列尚未领取"
+      },
+      "steps": [
+        {
+          "op": "fixture.prepare",
+          "args": {
+            "fixtureId": "crash-cutpoint",
+            "variantId": "RECOVERY-001"
+          }
+        },
+        {
+          "op": "fault.inject",
+          "args": {
+            "fault": "crash_before_claim"
+          }
+        },
+        {
+          "op": "system.observe",
+          "args": {
+            "deadlineMs": 5000,
+            "deadlinePolicy": "driver_must_override_for_declared_long_operations"
+          }
+        }
+      ],
+      "expected": {
+        "narrative": "重启只领取一次，工作不丢",
+        "invariants": [
+          "INV02",
+          "INV03",
+          "INV13",
+          "INV14",
+          "INV26"
+        ]
+      },
+      "requiredLevels": [
+        "L1",
+        "L2"
+      ],
+      "evidenceRequired": [
+        "structured event/control trace with stable IDs",
+        "independent state/side-effect oracle",
+        "real adapter evidence for each claimed L2/L3 result"
+      ]
+    },
+    {
+      "id": "RECOVERY-002",
+      "area": "RECOVERY",
+      "title": "领取后调用前崩溃",
+      "priority": "P0",
+      "status": "PLANNED",
+      "implementationRequired": true,
+      "given": {
+        "fixtureId": "crash-cutpoint",
+        "variantId": "RECOVERY-002",
+        "premise": "Run已登记，DSH未调用"
+      },
+      "steps": [
+        {
+          "op": "fixture.prepare",
+          "args": {
+            "fixtureId": "crash-cutpoint",
+            "variantId": "RECOVERY-002"
+          }
+        },
+        {
+          "op": "fault.inject",
+          "args": {
+            "fault": "crash_after_claim"
+          }
+        },
+        {
+          "op": "system.observe",
+          "args": {
+            "deadlineMs": 5000,
+            "deadlinePolicy": "driver_must_override_for_declared_long_operations"
+          }
+        }
+      ],
+      "expected": {
+        "narrative": "可对账恢复，不能永远假running",
+        "invariants": [
+          "INV02",
+          "INV03",
+          "INV13",
+          "INV14",
+          "INV26"
+        ]
+      },
+      "requiredLevels": [
+        "L1",
+        "L2"
+      ],
+      "evidenceRequired": [
+        "structured event/control trace with stable IDs",
+        "independent state/side-effect oracle",
+        "real adapter evidence for each claimed L2/L3 result"
+      ]
+    },
+    {
+      "id": "RECOVERY-003",
+      "area": "RECOVERY",
+      "title": "DSH受理后崩溃",
+      "priority": "P0",
+      "status": "PLANNED",
+      "implementationRequired": true,
+      "given": {
+        "fixtureId": "crash-cutpoint",
+        "variantId": "RECOVERY-003",
+        "premise": "关联ID未落盘"
+      },
+      "steps": [
+        {
+          "op": "fixture.prepare",
+          "args": {
+            "fixtureId": "crash-cutpoint",
+            "variantId": "RECOVERY-003"
+          }
+        },
+        {
+          "op": "fault.inject",
+          "args": {
+            "fault": "crash_after_dsh_accept"
+          }
+        },
+        {
+          "op": "system.observe",
+          "args": {
+            "deadlineMs": 5000,
+            "deadlinePolicy": "driver_must_override_for_declared_long_operations"
+          }
+        }
+      ],
+      "expected": {
+        "narrative": "通过上游关联对账或unknown，不盲重发",
+        "invariants": [
+          "INV02",
+          "INV03",
+          "INV13",
+          "INV14",
+          "INV26"
+        ]
+      },
+      "requiredLevels": [
+        "L1",
+        "L2"
+      ],
+      "evidenceRequired": [
+        "structured event/control trace with stable IDs",
+        "independent state/side-effect oracle",
+        "real adapter evidence for each claimed L2/L3 result"
+      ]
+    },
+    {
+      "id": "RECOVERY-004",
+      "area": "RECOVERY",
+      "title": "Outbox投递ACK丢失",
+      "priority": "P0",
+      "status": "PLANNED",
+      "implementationRequired": true,
+      "given": {
+        "fixtureId": "crash-cutpoint",
+        "variantId": "RECOVERY-004",
+        "premise": "成果已显示一次"
+      },
+      "steps": [
+        {
+          "op": "fixture.prepare",
+          "args": {
+            "fixtureId": "crash-cutpoint",
+            "variantId": "RECOVERY-004"
+          }
+        },
+        {
+          "op": "fault.inject",
+          "args": {
+            "fault": "drop_outbox_delivery_ack"
+          }
+        },
+        {
+          "op": "system.observe",
+          "args": {
+            "deadlineMs": 5000,
+            "deadlinePolicy": "driver_must_override_for_declared_long_operations"
+          }
+        }
+      ],
+      "expected": {
+        "narrative": "重试不重复用户汇报或执行",
+        "invariants": [
+          "INV02",
+          "INV03",
+          "INV13",
+          "INV14",
+          "INV26"
+        ]
+      },
+      "requiredLevels": [
+        "L1",
+        "L2"
+      ],
+      "evidenceRequired": [
+        "structured event/control trace with stable IDs",
+        "independent state/side-effect oracle",
+        "real adapter evidence for each claimed L2/L3 result"
+      ]
+    },
+    {
+      "id": "RECOVERY-005",
+      "area": "RECOVERY",
+      "title": "停止持久化后崩溃",
+      "priority": "P0",
+      "status": "PLANNED",
+      "implementationRequired": true,
+      "given": {
+        "fixtureId": "crash-cutpoint",
+        "variantId": "RECOVERY-005",
+        "premise": "controlEpoch已提升"
+      },
+      "steps": [
+        {
+          "op": "fixture.prepare",
+          "args": {
+            "fixtureId": "crash-cutpoint",
+            "variantId": "RECOVERY-005"
+          }
+        },
+        {
+          "op": "fault.inject",
+          "args": {
+            "fault": "crash_after_stop_persist"
+          }
+        },
+        {
+          "op": "system.observe",
+          "args": {
+            "deadlineMs": 5000,
+            "deadlinePolicy": "driver_must_override_for_declared_long_operations"
+          }
+        }
+      ],
+      "expected": {
+        "narrative": "恢复后仍冻结相同范围",
+        "invariants": [
+          "INV02",
+          "INV03",
+          "INV13",
+          "INV14",
+          "INV26"
+        ]
+      },
+      "requiredLevels": [
+        "L1",
+        "L2"
+      ],
+      "evidenceRequired": [
+        "structured event/control trace with stable IDs",
+        "independent state/side-effect oracle",
+        "real adapter evidence for each claimed L2/L3 result"
+      ]
+    },
+    {
+      "id": "RECOVERY-006",
+      "area": "RECOVERY",
+      "title": "工具状态未知",
+      "priority": "P0",
+      "status": "PLANNED",
+      "implementationRequired": true,
+      "given": {
+        "fixtureId": "crash-cutpoint",
+        "variantId": "RECOVERY-006",
+        "premise": "Host重启后工具外部状态未明"
+      },
+      "steps": [
+        {
+          "op": "fixture.prepare",
+          "args": {
+            "fixtureId": "crash-cutpoint",
+            "variantId": "RECOVERY-006"
+          }
+        },
+        {
+          "op": "ui.act",
+          "args": {
+            "action": "恢复后台工作"
+          }
+        },
+        {
+          "op": "system.observe",
+          "args": {
+            "deadlineMs": 5000,
+            "deadlinePolicy": "driver_must_override_for_declared_long_operations"
+          }
+        }
+      ],
+      "expected": {
+        "narrative": "显示未知与核对入口，不装作已停止",
+        "invariants": [
+          "INV02",
+          "INV03",
+          "INV13",
+          "INV14",
+          "INV26"
+        ]
+      },
+      "requiredLevels": [
+        "L1",
+        "L2"
+      ],
+      "evidenceRequired": [
+        "structured event/control trace with stable IDs",
+        "independent state/side-effect oracle",
+        "real adapter evidence for each claimed L2/L3 result"
+      ]
+    },
+    {
+      "id": "RECOVERY-007",
+      "area": "RECOVERY",
+      "title": "数据库只读",
+      "priority": "P0",
+      "status": "PLANNED",
+      "implementationRequired": true,
+      "given": {
+        "fixtureId": "crash-cutpoint",
+        "variantId": "RECOVERY-007",
+        "premise": "无法提交任务变化"
+      },
+      "steps": [
+        {
+          "op": "fixture.prepare",
+          "args": {
+            "fixtureId": "crash-cutpoint",
+            "variantId": "RECOVERY-007"
+          }
+        },
+        {
+          "op": "fault.inject",
+          "args": {
+            "fault": "database_read_only"
+          }
+        },
+        {
+          "op": "system.observe",
+          "args": {
+            "deadlineMs": 5000,
+            "deadlinePolicy": "driver_must_override_for_declared_long_operations"
+          }
+        }
+      ],
+      "expected": {
+        "narrative": "拒绝新执行或显示未受理，不显示成功",
+        "invariants": [
+          "INV02",
+          "INV03",
+          "INV13",
+          "INV14",
+          "INV26"
+        ]
+      },
+      "requiredLevels": [
+        "L1",
+        "L2"
+      ],
+      "evidenceRequired": [
+        "structured event/control trace with stable IDs",
+        "independent state/side-effect oracle",
+        "real adapter evidence for each claimed L2/L3 result"
+      ]
+    },
+    {
+      "id": "RECOVERY-008",
+      "area": "RECOVERY",
+      "title": "磁盘满",
+      "priority": "P0",
+      "status": "PLANNED",
+      "implementationRequired": true,
+      "given": {
+        "fixtureId": "crash-cutpoint",
+        "variantId": "RECOVERY-008",
+        "premise": "成果写入中失败"
+      },
+      "steps": [
+        {
+          "op": "fixture.prepare",
+          "args": {
+            "fixtureId": "crash-cutpoint",
+            "variantId": "RECOVERY-008"
+          }
+        },
+        {
+          "op": "fault.inject",
+          "args": {
+            "fault": "disk_full"
+          }
+        },
+        {
+          "op": "system.observe",
+          "args": {
+            "deadlineMs": 5000,
+            "deadlinePolicy": "driver_must_override_for_declared_long_operations"
+          }
+        }
+      ],
+      "expected": {
+        "narrative": "保留错误事实和已有成果，不假验收",
+        "invariants": [
+          "INV02",
+          "INV03",
+          "INV13",
+          "INV14",
+          "INV26"
+        ]
+      },
+      "requiredLevels": [
+        "L1",
+        "L2"
+      ],
+      "evidenceRequired": [
+        "structured event/control trace with stable IDs",
+        "independent state/side-effect oracle",
+        "real adapter evidence for each claimed L2/L3 result"
+      ]
+    },
+    {
+      "id": "RECOVERY-009",
+      "area": "RECOVERY",
+      "title": "乱序重复事件",
+      "priority": "P0",
+      "status": "PLANNED",
+      "implementationRequired": true,
+      "given": {
+        "fixtureId": "crash-cutpoint",
+        "variantId": "RECOVERY-009",
+        "premise": "follow流乱序/重复"
+      },
+      "steps": [
+        {
+          "op": "fixture.prepare",
+          "args": {
+            "fixtureId": "crash-cutpoint",
+            "variantId": "RECOVERY-009"
+          }
+        },
+        {
+          "op": "fault.inject",
+          "args": {
+            "fault": "duplicate_reorder_events"
+          }
+        },
+        {
+          "op": "system.observe",
+          "args": {
+            "deadlineMs": 5000,
+            "deadlinePolicy": "driver_must_override_for_declared_long_operations"
+          }
+        }
+      ],
+      "expected": {
+        "narrative": "去重并修缺口，终态不回退",
+        "invariants": [
+          "INV02",
+          "INV03",
+          "INV13",
+          "INV14",
+          "INV26"
+        ]
+      },
+      "requiredLevels": [
+        "L1",
+        "L2"
+      ],
+      "evidenceRequired": [
+        "structured event/control trace with stable IDs",
+        "independent state/side-effect oracle",
+        "real adapter evidence for each claimed L2/L3 result"
+      ]
+    },
+    {
+      "id": "RECOVERY-010",
+      "area": "RECOVERY",
+      "title": "cursor失效",
+      "priority": "P0",
+      "status": "PLANNED",
+      "implementationRequired": true,
+      "given": {
+        "fixtureId": "crash-cutpoint",
+        "variantId": "RECOVERY-010",
+        "premise": "Host换代旧cursor无效"
+      },
+      "steps": [
+        {
+          "op": "fixture.prepare",
+          "args": {
+            "fixtureId": "crash-cutpoint",
+            "variantId": "RECOVERY-010"
+          }
+        },
+        {
+          "op": "fault.inject",
+          "args": {
+            "fault": "invalidate_event_cursor"
+          }
+        },
+        {
+          "op": "system.observe",
+          "args": {
+            "deadlineMs": 5000,
+            "deadlinePolicy": "driver_must_override_for_declared_long_operations"
+          }
+        }
+      ],
+      "expected": {
+        "narrative": "重取权威baseline，保留业务身份",
+        "invariants": [
+          "INV02",
+          "INV03",
+          "INV13",
+          "INV14",
+          "INV26"
+        ]
+      },
+      "requiredLevels": [
+        "L1",
+        "L2"
+      ],
+      "evidenceRequired": [
+        "structured event/control trace with stable IDs",
+        "independent state/side-effect oracle",
+        "real adapter evidence for each claimed L2/L3 result"
+      ]
+    },
+    {
+      "id": "DATA-001",
+      "area": "DATA",
+      "title": "旧卡只读导入",
+      "priority": "P0",
+      "status": "PLANNED",
+      "implementationRequired": true,
+      "given": {
+        "fixtureId": "old-card-import",
+        "variantId": "DATA-001",
+        "premise": "有MD卡与依赖"
+      },
+      "steps": [
+        {
+          "op": "fixture.prepare",
+          "args": {
+            "fixtureId": "old-card-import",
+            "variantId": "DATA-001"
+          }
+        },
+        {
+          "op": "ui.act",
+          "args": {
+            "action": "预览并导入选定卡池"
+          }
+        },
+        {
+          "op": "system.observe",
+          "args": {
+            "deadlineMs": 5000,
+            "deadlinePolicy": "driver_must_override_for_declared_long_operations"
+          }
+        }
+      ],
+      "expected": {
+        "narrative": "原文件字节不变，映射可追溯",
+        "invariants": [
+          "INV01",
+          "INV11",
+          "INV19",
+          "INV20"
+        ]
+      },
+      "requiredLevels": [
+        "L1",
+        "L2"
+      ],
+      "evidenceRequired": [
+        "structured event/control trace with stable IDs",
+        "independent state/side-effect oracle",
+        "real adapter evidence for each claimed L2/L3 result"
+      ]
+    },
+    {
+      "id": "DATA-002",
+      "area": "DATA",
+      "title": "重复导入",
+      "priority": "P0",
+      "status": "PLANNED",
+      "implementationRequired": true,
+      "given": {
+        "fixtureId": "old-card-import",
+        "variantId": "DATA-002",
+        "premise": "相同sourceId已存在"
+      },
+      "steps": [
+        {
+          "op": "fixture.prepare",
+          "args": {
+            "fixtureId": "old-card-import",
+            "variantId": "DATA-002"
+          }
+        },
+        {
+          "op": "ui.act",
+          "args": {
+            "action": "重复导入卡池"
+          }
+        },
+        {
+          "op": "system.observe",
+          "args": {
+            "deadlineMs": 5000,
+            "deadlinePolicy": "driver_must_override_for_declared_long_operations"
+          }
+        }
+      ],
+      "expected": {
+        "narrative": "不重复任务与依赖",
+        "invariants": [
+          "INV01",
+          "INV11",
+          "INV19",
+          "INV20"
+        ]
+      },
+      "requiredLevels": [
+        "L1",
+        "L2"
+      ],
+      "evidenceRequired": [
+        "structured event/control trace with stable IDs",
+        "independent state/side-effect oracle",
+        "real adapter evidence for each claimed L2/L3 result"
+      ]
+    },
+    {
+      "id": "DATA-003",
+      "area": "DATA",
+      "title": "损坏旧卡",
+      "priority": "P0",
+      "status": "PLANNED",
+      "implementationRequired": true,
+      "given": {
+        "fixtureId": "old-card-import",
+        "variantId": "DATA-003",
+        "premise": "缺ID或依赖目标"
+      },
+      "steps": [
+        {
+          "op": "fixture.prepare",
+          "args": {
+            "fixtureId": "old-card-import",
+            "variantId": "DATA-003"
+          }
+        },
+        {
+          "op": "ui.act",
+          "args": {
+            "action": "导入异常卡"
+          }
+        },
+        {
+          "op": "system.observe",
+          "args": {
+            "deadlineMs": 5000,
+            "deadlinePolicy": "driver_must_override_for_declared_long_operations"
+          }
+        }
+      ],
+      "expected": {
+        "narrative": "逐项报告，不编造依赖或半写无说明",
+        "invariants": [
+          "INV01",
+          "INV11",
+          "INV19",
+          "INV20"
+        ]
+      },
+      "requiredLevels": [
+        "L1",
+        "L2"
+      ],
+      "evidenceRequired": [
+        "structured event/control trace with stable IDs",
+        "independent state/side-effect oracle",
+        "real adapter evidence for each claimed L2/L3 result"
+      ]
+    },
+    {
+      "id": "DATA-004",
+      "area": "DATA",
+      "title": "项目移动",
+      "priority": "P0",
+      "status": "PLANNED",
+      "implementationRequired": true,
+      "given": {
+        "fixtureId": "old-card-import",
+        "variantId": "DATA-004",
+        "premise": "rootPath已失效"
+      },
+      "steps": [
+        {
+          "op": "fixture.prepare",
+          "args": {
+            "fixtureId": "old-card-import",
+            "variantId": "DATA-004"
+          }
+        },
+        {
+          "op": "user.say",
+          "args": {
+            "text": "项目文件夹挪了，现在在新位置"
+          }
+        },
+        {
+          "op": "system.observe",
+          "args": {
+            "deadlineMs": 5000,
+            "deadlinePolicy": "driver_must_override_for_declared_long_operations"
+          }
+        }
+      ],
+      "expected": {
+        "narrative": "明确更新绑定，稳定ProjectID保持",
+        "invariants": [
+          "INV01",
+          "INV11",
+          "INV19",
+          "INV20"
+        ]
+      },
+      "requiredLevels": [
+        "L1",
+        "L2"
+      ],
+      "evidenceRequired": [
+        "structured event/control trace with stable IDs",
+        "independent state/side-effect oracle",
+        "real adapter evidence for each claimed L2/L3 result"
+      ]
+    },
+    {
+      "id": "DATA-005",
+      "area": "DATA",
+      "title": "离线磁盘",
+      "priority": "P0",
+      "status": "PLANNED",
+      "implementationRequired": true,
+      "given": {
+        "fixtureId": "old-card-import",
+        "variantId": "DATA-005",
+        "premise": "素材在未挂载磁盘"
+      },
+      "steps": [
+        {
+          "op": "fixture.prepare",
+          "args": {
+            "fixtureId": "old-card-import",
+            "variantId": "DATA-005"
+          }
+        },
+        {
+          "op": "user.say",
+          "args": {
+            "text": "继续整理素材"
+          }
+        },
+        {
+          "op": "system.observe",
+          "args": {
+            "deadlineMs": 5000,
+            "deadlinePolicy": "driver_must_override_for_declared_long_operations"
+          }
+        }
+      ],
+      "expected": {
+        "narrative": "显示不可用，不能在Mac创建同名目录",
+        "invariants": [
+          "INV01",
+          "INV11",
+          "INV19",
+          "INV20"
+        ]
+      },
+      "requiredLevels": [
+        "L1",
+        "L2"
+      ],
+      "evidenceRequired": [
+        "structured event/control trace with stable IDs",
+        "independent state/side-effect oracle",
+        "real adapter evidence for each claimed L2/L3 result"
+      ]
+    },
+    {
+      "id": "DATA-006",
+      "area": "DATA",
+      "title": "非Git办公目录",
+      "priority": "P0",
+      "status": "PLANNED",
+      "implementationRequired": true,
+      "given": {
+        "fixtureId": "old-card-import",
+        "variantId": "DATA-006",
+        "premise": "无仓库只有文件"
+      },
+      "steps": [
+        {
+          "op": "fixture.prepare",
+          "args": {
+            "fixtureId": "old-card-import",
+            "variantId": "DATA-006"
+          }
+        },
+        {
+          "op": "user.say",
+          "args": {
+            "text": "整理这个文件夹的文档目录"
+          }
+        },
+        {
+          "op": "system.observe",
+          "args": {
+            "deadlineMs": 5000,
+            "deadlinePolicy": "driver_must_override_for_declared_long_operations"
+          }
+        }
+      ],
+      "expected": {
+        "narrative": "不强制git init或worktree",
+        "invariants": [
+          "INV01",
+          "INV11",
+          "INV19",
+          "INV20"
+        ]
+      },
+      "requiredLevels": [
+        "L1",
+        "L2"
+      ],
+      "evidenceRequired": [
+        "structured event/control trace with stable IDs",
+        "independent state/side-effect oracle",
+        "real adapter evidence for each claimed L2/L3 result"
+      ]
+    },
+    {
+      "id": "DATA-007",
+      "area": "DATA",
+      "title": "路径边界",
+      "priority": "P0",
+      "status": "PLANNED",
+      "implementationRequired": true,
+      "given": {
+        "fixtureId": "old-card-import",
+        "variantId": "DATA-007",
+        "premise": "预览请求越出授权项目"
+      },
+      "steps": [
+        {
+          "op": "fixture.prepare",
+          "args": {
+            "fixtureId": "old-card-import",
+            "variantId": "DATA-007"
+          }
+        },
+        {
+          "op": "fault.inject",
+          "args": {
+            "fault": "path_traversal_request"
+          }
+        },
+        {
+          "op": "system.observe",
+          "args": {
+            "deadlineMs": 5000,
+            "deadlinePolicy": "driver_must_override_for_declared_long_operations"
+          }
+        }
+      ],
+      "expected": {
+        "narrative": "拒绝越权，不读取私人目录",
+        "invariants": [
+          "INV01",
+          "INV11",
+          "INV19",
+          "INV20"
+        ]
+      },
+      "requiredLevels": [
+        "L1",
+        "L2"
+      ],
+      "evidenceRequired": [
+        "structured event/control trace with stable IDs",
+        "independent state/side-effect oracle",
+        "real adapter evidence for each claimed L2/L3 result"
+      ]
+    },
+    {
+      "id": "DATA-008",
+      "area": "DATA",
+      "title": "Unicode路径",
+      "priority": "P0",
+      "status": "PLANNED",
+      "implementationRequired": true,
+      "given": {
+        "fixtureId": "old-card-import",
+        "variantId": "DATA-008",
+        "premise": "项目名有中文空格"
+      },
+      "steps": [
+        {
+          "op": "fixture.prepare",
+          "args": {
+            "fixtureId": "old-card-import",
+            "variantId": "DATA-008"
+          }
+        },
+        {
+          "op": "user.say",
+          "args": {
+            "text": "打开方案第二版里的汇总表"
+          }
+        },
+        {
+          "op": "system.observe",
+          "args": {
+            "deadlineMs": 5000,
+            "deadlinePolicy": "driver_must_override_for_declared_long_operations"
+          }
+        }
+      ],
+      "expected": {
+        "narrative": "正确路径解析、上传和预览",
+        "invariants": [
+          "INV01",
+          "INV11",
+          "INV19",
+          "INV20"
+        ]
+      },
+      "requiredLevels": [
+        "L1",
+        "L2"
+      ],
+      "evidenceRequired": [
+        "structured event/control trace with stable IDs",
+        "independent state/side-effect oracle",
+        "real adapter evidence for each claimed L2/L3 result"
+      ]
+    },
+    {
+      "id": "DATA-009",
+      "area": "DATA",
+      "title": "一致备份恢复",
+      "priority": "P0",
+      "status": "PLANNED",
+      "implementationRequired": true,
+      "given": {
+        "fixtureId": "old-card-import",
+        "variantId": "DATA-009",
+        "premise": "WAL中有已提交变更"
+      },
+      "steps": [
+        {
+          "op": "fixture.prepare",
+          "args": {
+            "fixtureId": "old-card-import",
+            "variantId": "DATA-009"
+          }
+        },
+        {
+          "op": "ui.act",
+          "args": {
+            "action": "隔离备份恢复演练"
+          }
+        },
+        {
+          "op": "system.observe",
+          "args": {
+            "deadlineMs": 5000,
+            "deadlinePolicy": "driver_must_override_for_declared_long_operations"
+          }
+        }
+      ],
+      "expected": {
+        "narrative": "任务/Run/Outbox/绑定一致",
+        "invariants": [
+          "INV01",
+          "INV11",
+          "INV19",
+          "INV20"
+        ]
+      },
+      "requiredLevels": [
+        "L1",
+        "L2"
+      ],
+      "evidenceRequired": [
+        "structured event/control trace with stable IDs",
+        "independent state/side-effect oracle",
+        "real adapter evidence for each claimed L2/L3 result"
+      ]
+    },
+    {
+      "id": "DATA-010",
+      "area": "DATA",
+      "title": "隐私资料隔离",
+      "priority": "P0",
+      "status": "PLANNED",
+      "implementationRequired": true,
+      "given": {
+        "fixtureId": "old-card-import",
+        "variantId": "DATA-010",
+        "premise": "卡池旁有凭据与个人库"
+      },
+      "steps": [
+        {
+          "op": "fixture.prepare",
+          "args": {
+            "fixtureId": "old-card-import",
+            "variantId": "DATA-010"
+          }
+        },
+        {
+          "op": "ui.act",
+          "args": {
+            "action": "导入指定卡池"
+          }
+        },
+        {
+          "op": "system.observe",
+          "args": {
+            "deadlineMs": 5000,
+            "deadlinePolicy": "driver_must_override_for_declared_long_operations"
+          }
+        }
+      ],
+      "expected": {
+        "narrative": "仅读选择范围，不全盘抓取",
+        "invariants": [
+          "INV01",
+          "INV11",
+          "INV19",
+          "INV20"
+        ]
+      },
+      "requiredLevels": [
+        "L1",
+        "L2"
+      ],
+      "evidenceRequired": [
+        "structured event/control trace with stable IDs",
+        "independent state/side-effect oracle",
+        "real adapter evidence for each claimed L2/L3 result"
+      ]
+    },
+    {
+      "id": "OFFICE-001",
+      "area": "OFFICE",
+      "title": "会议纪要",
+      "priority": "P0",
+      "status": "PLANNED",
+      "implementationRequired": true,
+      "given": {
+        "fixtureId": "office-deliverables",
+        "variantId": "OFFICE-001",
+        "premise": "给定脱敏会议文本"
+      },
+      "steps": [
+        {
+          "op": "fixture.prepare",
+          "args": {
+            "fixtureId": "office-deliverables",
+            "variantId": "OFFICE-001"
+          }
+        },
+        {
+          "op": "user.say",
+          "args": {
+            "text": "把今天会议整理成待办和决定，放项目目录"
+          }
+        },
+        {
+          "op": "system.observe",
+          "args": {
+            "deadlineMs": 5000,
+            "deadlinePolicy": "driver_must_override_for_declared_long_operations"
+          }
+        }
+      ],
+      "expected": {
+        "narrative": "交付内容含已知决定与待办，关联任务正确",
+        "invariants": [
+          "INV04",
+          "INV15",
+          "INV16",
+          "INV23",
+          "INV25"
+        ]
+      },
+      "requiredLevels": [
+        "L1",
+        "L2",
+        "L3"
+      ],
+      "evidenceRequired": [
+        "structured event/control trace with stable IDs",
+        "independent state/side-effect oracle",
+        "real adapter evidence for each claimed L2/L3 result"
+      ]
+    },
+    {
+      "id": "OFFICE-002",
+      "area": "OFFICE",
+      "title": "报告迭代",
+      "priority": "P0",
+      "status": "PLANNED",
+      "implementationRequired": true,
+      "given": {
+        "fixtureId": "office-deliverables",
+        "variantId": "OFFICE-002",
+        "premise": "已有报告v1"
+      },
+      "steps": [
+        {
+          "op": "fixture.prepare",
+          "args": {
+            "fixtureId": "office-deliverables",
+            "variantId": "OFFICE-002"
+          }
+        },
+        {
+          "op": "user.say",
+          "args": {
+            "text": "继续昨天那份报告，先修我标的三处"
+          }
+        },
+        {
+          "op": "system.observe",
+          "args": {
+            "deadlineMs": 5000,
+            "deadlinePolicy": "driver_must_override_for_declared_long_operations"
+          }
+        }
+      ],
+      "expected": {
+        "narrative": "读取相关来源，只推进本轮修改",
+        "invariants": [
+          "INV04",
+          "INV15",
+          "INV16",
+          "INV23",
+          "INV25"
+        ]
+      },
+      "requiredLevels": [
+        "L1",
+        "L2",
+        "L3"
+      ],
+      "evidenceRequired": [
+        "structured event/control trace with stable IDs",
+        "independent state/side-effect oracle",
+        "real adapter evidence for each claimed L2/L3 result"
+      ]
+    },
+    {
+      "id": "OFFICE-003",
+      "area": "OFFICE",
+      "title": "Word交付",
+      "priority": "P0",
+      "status": "PLANNED",
+      "implementationRequired": true,
+      "given": {
+        "fixtureId": "office-deliverables",
+        "variantId": "OFFICE-003",
+        "premise": "给定结构和资料"
+      },
+      "steps": [
+        {
+          "op": "fixture.prepare",
+          "args": {
+            "fixtureId": "office-deliverables",
+            "variantId": "OFFICE-003"
+          }
+        },
+        {
+          "op": "user.say",
+          "args": {
+            "text": "生成一页项目简报的Word文档"
+          }
+        },
+        {
+          "op": "system.observe",
+          "args": {
+            "deadlineMs": 5000,
+            "deadlinePolicy": "driver_must_override_for_declared_long_operations"
+          }
+        }
+      ],
+      "expected": {
+        "narrative": "真实可打开文档，内容结构符合标准",
+        "invariants": [
+          "INV04",
+          "INV15",
+          "INV16",
+          "INV23",
+          "INV25"
+        ]
+      },
+      "requiredLevels": [
+        "L1",
+        "L2",
+        "L3"
+      ],
+      "evidenceRequired": [
+        "structured event/control trace with stable IDs",
+        "independent state/side-effect oracle",
+        "real adapter evidence for each claimed L2/L3 result"
+      ]
+    },
+    {
+      "id": "OFFICE-004",
+      "area": "OFFICE",
+      "title": "表格整理",
+      "priority": "P0",
+      "status": "PLANNED",
+      "implementationRequired": true,
+      "given": {
+        "fixtureId": "office-deliverables",
+        "variantId": "OFFICE-004",
+        "premise": "给定CSV样例"
+      },
+      "steps": [
+        {
+          "op": "fixture.prepare",
+          "args": {
+            "fixtureId": "office-deliverables",
+            "variantId": "OFFICE-004"
+          }
+        },
+        {
+          "op": "user.say",
+          "args": {
+            "text": "把费用按类别汇总，别改原始表"
+          }
+        },
+        {
+          "op": "system.observe",
+          "args": {
+            "deadlineMs": 5000,
+            "deadlinePolicy": "driver_must_override_for_declared_long_operations"
+          }
+        }
+      ],
+      "expected": {
+        "narrative": "生成正确汇总，原文件不变",
+        "invariants": [
+          "INV04",
+          "INV15",
+          "INV16",
+          "INV23",
+          "INV25"
+        ]
+      },
+      "requiredLevels": [
+        "L1",
+        "L2",
+        "L3"
+      ],
+      "evidenceRequired": [
+        "structured event/control trace with stable IDs",
+        "independent state/side-effect oracle",
+        "real adapter evidence for each claimed L2/L3 result"
+      ]
+    },
+    {
+      "id": "OFFICE-005",
+      "area": "OFFICE",
+      "title": "演示稿",
+      "priority": "P0",
+      "status": "PLANNED",
+      "implementationRequired": true,
+      "given": {
+        "fixtureId": "office-deliverables",
+        "variantId": "OFFICE-005",
+        "premise": "给定小型项目资料"
+      },
+      "steps": [
+        {
+          "op": "fixture.prepare",
+          "args": {
+            "fixtureId": "office-deliverables",
+            "variantId": "OFFICE-005"
+          }
+        },
+        {
+          "op": "user.say",
+          "args": {
+            "text": "做个五页以内的汇报提纲"
+          }
+        },
+        {
+          "op": "system.observe",
+          "args": {
+            "deadlineMs": 5000,
+            "deadlinePolicy": "driver_must_override_for_declared_long_operations"
+          }
+        }
+      ],
+      "expected": {
+        "narrative": "交付可用提纲，不把规划当已制作PPT",
+        "invariants": [
+          "INV04",
+          "INV15",
+          "INV16",
+          "INV23",
+          "INV25"
+        ]
+      },
+      "requiredLevels": [
+        "L1",
+        "L2",
+        "L3"
+      ],
+      "evidenceRequired": [
+        "structured event/control trace with stable IDs",
+        "independent state/side-effect oracle",
+        "real adapter evidence for each claimed L2/L3 result"
+      ]
+    },
+    {
+      "id": "OFFICE-006",
+      "area": "OFFICE",
+      "title": "设计方案主观选择",
+      "priority": "P0",
+      "status": "PLANNED",
+      "implementationRequired": true,
+      "given": {
+        "fixtureId": "office-deliverables",
+        "variantId": "OFFICE-006",
+        "premise": "两种视觉方向"
+      },
+      "steps": [
+        {
+          "op": "fixture.prepare",
+          "args": {
+            "fixtureId": "office-deliverables",
+            "variantId": "OFFICE-006"
+          }
+        },
+        {
+          "op": "user.say",
+          "args": {
+            "text": "两个方向先都给我看看，别替我定"
+          }
+        },
+        {
+          "op": "system.observe",
+          "args": {
+            "deadlineMs": 5000,
+            "deadlinePolicy": "driver_must_override_for_declared_long_operations"
+          }
+        }
+      ],
+      "expected": {
+        "narrative": "待选择，不自动宣称最终完成",
+        "invariants": [
+          "INV04",
+          "INV15",
+          "INV16",
+          "INV23",
+          "INV25"
+        ]
+      },
+      "requiredLevels": [
+        "L1",
+        "L2",
+        "L3"
+      ],
+      "evidenceRequired": [
+        "structured event/control trace with stable IDs",
+        "independent state/side-effect oracle",
+        "real adapter evidence for each claimed L2/L3 result"
+      ]
+    },
+    {
+      "id": "OFFICE-007",
+      "area": "OFFICE",
+      "title": "图片素材清单",
+      "priority": "P0",
+      "status": "PLANNED",
+      "implementationRequired": true,
+      "given": {
+        "fixtureId": "office-deliverables",
+        "variantId": "OFFICE-007",
+        "premise": "非代码素材目录"
+      },
+      "steps": [
+        {
+          "op": "fixture.prepare",
+          "args": {
+            "fixtureId": "office-deliverables",
+            "variantId": "OFFICE-007"
+          }
+        },
+        {
+          "op": "user.say",
+          "args": {
+            "text": "找出缺的标准图，列三项最重要的"
+          }
+        },
+        {
+          "op": "system.observe",
+          "args": {
+            "deadlineMs": 5000,
+            "deadlinePolicy": "driver_must_override_for_declared_long_operations"
+          }
+        }
+      ],
+      "expected": {
+        "narrative": "基于实际素材清单，有证据，不强行代码任务",
+        "invariants": [
+          "INV04",
+          "INV15",
+          "INV16",
+          "INV23",
+          "INV25"
+        ]
+      },
+      "requiredLevels": [
+        "L1",
+        "L2",
+        "L3"
+      ],
+      "evidenceRequired": [
+        "structured event/control trace with stable IDs",
+        "independent state/side-effect oracle",
+        "real adapter evidence for each claimed L2/L3 result"
+      ]
+    },
+    {
+      "id": "OFFICE-008",
+      "area": "OFFICE",
+      "title": "网页研究",
+      "priority": "P0",
+      "status": "PLANNED",
+      "implementationRequired": true,
+      "given": {
+        "fixtureId": "office-deliverables",
+        "variantId": "OFFICE-008",
+        "premise": "给定允许来源和范围"
+      },
+      "steps": [
+        {
+          "op": "fixture.prepare",
+          "args": {
+            "fixtureId": "office-deliverables",
+            "variantId": "OFFICE-008"
+          }
+        },
+        {
+          "op": "user.say",
+          "args": {
+            "text": "帮我比较这几个工具，先别注册账号"
+          }
+        },
+        {
+          "op": "system.observe",
+          "args": {
+            "deadlineMs": 5000,
+            "deadlinePolicy": "driver_must_override_for_declared_long_operations"
+          }
+        }
+      ],
+      "expected": {
+        "narrative": "来源可查，不擅自注册或外发",
+        "invariants": [
+          "INV04",
+          "INV15",
+          "INV16",
+          "INV23",
+          "INV25"
+        ]
+      },
+      "requiredLevels": [
+        "L1",
+        "L2",
+        "L3"
+      ],
+      "evidenceRequired": [
+        "structured event/control trace with stable IDs",
+        "independent state/side-effect oracle",
+        "real adapter evidence for each claimed L2/L3 result"
+      ]
+    },
+    {
+      "id": "OFFICE-009",
+      "area": "OFFICE",
+      "title": "邮件草稿",
+      "priority": "P0",
+      "status": "PLANNED",
+      "implementationRequired": true,
+      "given": {
+        "fixtureId": "office-deliverables",
+        "variantId": "OFFICE-009",
+        "premise": "无外发授权"
+      },
+      "steps": [
+        {
+          "op": "fixture.prepare",
+          "args": {
+            "fixtureId": "office-deliverables",
+            "variantId": "OFFICE-009"
+          }
+        },
+        {
+          "op": "user.say",
+          "args": {
+            "text": "帮我写封催进度邮件，先别发"
+          }
+        },
+        {
+          "op": "system.observe",
+          "args": {
+            "deadlineMs": 5000,
+            "deadlinePolicy": "driver_must_override_for_declared_long_operations"
+          }
+        }
+      ],
+      "expected": {
+        "narrative": "仅草稿；真实外部投递计数为零",
+        "invariants": [
+          "INV04",
+          "INV15",
+          "INV16",
+          "INV23",
+          "INV25"
+        ]
+      },
+      "requiredLevels": [
+        "L1",
+        "L2",
+        "L3"
+      ],
+      "evidenceRequired": [
+        "structured event/control trace with stable IDs",
+        "independent state/side-effect oracle",
+        "real adapter evidence for each claimed L2/L3 result"
+      ]
+    },
+    {
+      "id": "OFFICE-010",
+      "area": "OFFICE",
+      "title": "差旅行程草案",
+      "priority": "P0",
+      "status": "PLANNED",
+      "implementationRequired": true,
+      "given": {
+        "fixtureId": "office-deliverables",
+        "variantId": "OFFICE-010",
+        "premise": "有偏好和时间约束"
+      },
+      "steps": [
+        {
+          "op": "fixture.prepare",
+          "args": {
+            "fixtureId": "office-deliverables",
+            "variantId": "OFFICE-010"
+          }
+        },
+        {
+          "op": "user.say",
+          "args": {
+            "text": "帮我排个两天行程，先别订票"
+          }
+        },
+        {
+          "op": "system.observe",
+          "args": {
+            "deadlineMs": 5000,
+            "deadlinePolicy": "driver_must_override_for_declared_long_operations"
+          }
+        }
+      ],
+      "expected": {
+        "narrative": "保留预算/偏好，不进行购买",
+        "invariants": [
+          "INV04",
+          "INV15",
+          "INV16",
+          "INV23",
+          "INV25"
+        ]
+      },
+      "requiredLevels": [
+        "L1",
+        "L2",
+        "L3"
+      ],
+      "evidenceRequired": [
+        "structured event/control trace with stable IDs",
+        "independent state/side-effect oracle",
+        "real adapter evidence for each claimed L2/L3 result"
+      ]
+    },
+    {
+      "id": "OFFICE-011",
+      "area": "OFFICE",
+      "title": "跨项目个人提醒",
+      "priority": "P0",
+      "status": "PLANNED",
+      "implementationRequired": true,
+      "given": {
+        "fixtureId": "office-deliverables",
+        "variantId": "OFFICE-011",
+        "premise": "主助理知道两个项目"
+      },
+      "steps": [
+        {
+          "op": "fixture.prepare",
+          "args": {
+            "fixtureId": "office-deliverables",
+            "variantId": "OFFICE-011"
+          }
+        },
+        {
+          "op": "user.say",
+          "args": {
+            "text": "我现在没空，告诉我哪些事需要我决定"
+          }
+        },
+        {
+          "op": "system.observe",
+          "args": {
+            "deadlineMs": 5000,
+            "deadlinePolicy": "driver_must_override_for_declared_long_operations"
+          }
+        }
+      ],
+      "expected": {
+        "narrative": "汇总待决定项，不全项目扫描或逐卡追问",
+        "invariants": [
+          "INV04",
+          "INV15",
+          "INV16",
+          "INV23",
+          "INV25"
+        ]
+      },
+      "requiredLevels": [
+        "L1",
+        "L2",
+        "L3"
+      ],
+      "evidenceRequired": [
+        "structured event/control trace with stable IDs",
+        "independent state/side-effect oracle",
+        "real adapter evidence for each claimed L2/L3 result"
+      ]
+    },
+    {
+      "id": "OFFICE-012",
+      "area": "OFFICE",
+      "title": "日常中断续上",
+      "priority": "P0",
+      "status": "PLANNED",
+      "implementationRequired": true,
+      "given": {
+        "fixtureId": "office-deliverables",
+        "variantId": "OFFICE-012",
+        "premise": "刚完成部分办公整理"
+      },
+      "steps": [
+        {
+          "op": "fixture.prepare",
+          "args": {
+            "fixtureId": "office-deliverables",
+            "variantId": "OFFICE-012"
+          }
+        },
+        {
+          "op": "user.say",
+          "args": {
+            "text": "今天先这样，明天接着刚才的来"
+          }
+        },
+        {
+          "op": "system.observe",
+          "args": {
+            "deadlineMs": 5000,
+            "deadlinePolicy": "driver_must_override_for_declared_long_operations"
+          }
+        }
+      ],
+      "expected": {
+        "narrative": "保存检查点，不后台擅自启动新计划",
+        "invariants": [
+          "INV04",
+          "INV15",
+          "INV16",
+          "INV23",
+          "INV25"
+        ]
+      },
+      "requiredLevels": [
+        "L1",
+        "L2",
+        "L3"
+      ],
+      "evidenceRequired": [
+        "structured event/control trace with stable IDs",
+        "independent state/side-effect oracle",
+        "real adapter evidence for each claimed L2/L3 result"
+      ]
+    },
+    {
+      "id": "UX-001",
+      "area": "UX",
+      "title": "后台控制常驻",
+      "priority": "P1",
+      "status": "PLANNED",
+      "implementationRequired": true,
+      "given": {
+        "fixtureId": "desktop-frontstage",
+        "variantId": "UX-001",
+        "premise": "主助理idle且后台两项"
+      },
+      "steps": [
+        {
+          "op": "fixture.prepare",
+          "args": {
+            "fixtureId": "desktop-frontstage",
+            "variantId": "UX-001"
+          }
+        },
+        {
+          "op": "ui.act",
+          "args": {
+            "action": "查看主界面"
+          }
+        },
+        {
+          "op": "system.observe",
+          "args": {
+            "deadlineMs": 5000,
+            "deadlinePolicy": "driver_must_override_for_declared_long_operations"
+          }
+        }
+      ],
+      "expected": {
+        "narrative": "后台数量和Stop可见，可继续输入",
+        "invariants": [
+          "INV05",
+          "INV17",
+          "INV18",
+          "INV25"
+        ]
+      },
+      "requiredLevels": [
+        "L1",
+        "L3",
+        "L4"
+      ],
+      "evidenceRequired": [
+        "structured event/control trace with stable IDs",
+        "independent state/side-effect oracle",
+        "real adapter evidence for each claimed L2/L3 result"
+      ]
+    },
+    {
+      "id": "UX-002",
+      "area": "UX",
+      "title": "否定停止",
+      "priority": "P1",
+      "status": "PLANNED",
+      "implementationRequired": true,
+      "given": {
+        "fixtureId": "desktop-frontstage",
+        "variantId": "UX-002",
+        "premise": "R_A运行"
+      },
+      "steps": [
+        {
+          "op": "fixture.prepare",
+          "args": {
+            "fixtureId": "desktop-frontstage",
+            "variantId": "UX-002"
+          }
+        },
+        {
+          "op": "user.say",
+          "args": {
+            "text": "别停，继续做"
+          }
+        },
+        {
+          "op": "system.observe",
+          "args": {
+            "deadlineMs": 5000,
+            "deadlinePolicy": "driver_must_override_for_declared_long_operations"
+          }
+        }
+      ],
+      "expected": {
+        "narrative": "不触发Stop",
+        "invariants": [
+          "INV05",
+          "INV17",
+          "INV18",
+          "INV25"
+        ]
+      },
+      "requiredLevels": [
+        "L1",
+        "L3",
+        "L4"
+      ],
+      "evidenceRequired": [
+        "structured event/control trace with stable IDs",
+        "independent state/side-effect oracle",
+        "real adapter evidence for each claimed L2/L3 result"
+      ]
+    },
+    {
+      "id": "UX-003",
+      "area": "UX",
+      "title": "问停止方法",
+      "priority": "P1",
+      "status": "PLANNED",
+      "implementationRequired": true,
+      "given": {
+        "fixtureId": "desktop-frontstage",
+        "variantId": "UX-003",
+        "premise": "R_A运行"
+      },
+      "steps": [
+        {
+          "op": "fixture.prepare",
+          "args": {
+            "fixtureId": "desktop-frontstage",
+            "variantId": "UX-003"
+          }
+        },
+        {
+          "op": "user.say",
+          "args": {
+            "text": "如果想停止该按哪里"
+          }
+        },
+        {
+          "op": "system.observe",
+          "args": {
+            "deadlineMs": 5000,
+            "deadlinePolicy": "driver_must_override_for_declared_long_operations"
+          }
+        }
+      ],
+      "expected": {
+        "narrative": "解释入口，不停止",
+        "invariants": [
+          "INV05",
+          "INV17",
+          "INV18",
+          "INV25"
+        ]
+      },
+      "requiredLevels": [
+        "L1",
+        "L3",
+        "L4"
+      ],
+      "evidenceRequired": [
+        "structured event/control trace with stable IDs",
+        "independent state/side-effect oracle",
+        "real adapter evidence for each claimed L2/L3 result"
+      ]
+    },
+    {
+      "id": "UX-004",
+      "area": "UX",
+      "title": "引用停止文案",
+      "priority": "P1",
+      "status": "PLANNED",
+      "implementationRequired": true,
+      "given": {
+        "fixtureId": "desktop-frontstage",
+        "variantId": "UX-004",
+        "premise": "编辑按钮说明文档"
+      },
+      "steps": [
+        {
+          "op": "fixture.prepare",
+          "args": {
+            "fixtureId": "desktop-frontstage",
+            "variantId": "UX-004"
+          }
+        },
+        {
+          "op": "user.say",
+          "args": {
+            "text": "把按钮文案改成“停止工作”"
+          }
+        },
+        {
+          "op": "system.observe",
+          "args": {
+            "deadlineMs": 5000,
+            "deadlinePolicy": "driver_must_override_for_declared_long_operations"
+          }
+        }
+      ],
+      "expected": {
+        "narrative": "不误停实际任务",
+        "invariants": [
+          "INV05",
+          "INV17",
+          "INV18",
+          "INV25"
+        ]
+      },
+      "requiredLevels": [
+        "L1",
+        "L3",
+        "L4"
+      ],
+      "evidenceRequired": [
+        "structured event/control trace with stable IDs",
+        "independent state/side-effect oracle",
+        "real adapter evidence for each claimed L2/L3 result"
+      ]
+    },
+    {
+      "id": "UX-005",
+      "area": "UX",
+      "title": "中文输入法",
+      "priority": "P1",
+      "status": "PLANNED",
+      "implementationRequired": true,
+      "given": {
+        "fixtureId": "desktop-frontstage",
+        "variantId": "UX-005",
+        "premise": "处于候选词组合态"
+      },
+      "steps": [
+        {
+          "op": "fixture.prepare",
+          "args": {
+            "fixtureId": "desktop-frontstage",
+            "variantId": "UX-005"
+          }
+        },
+        {
+          "op": "ui.act",
+          "args": {
+            "action": "输入法Enter确认候选词"
+          }
+        },
+        {
+          "op": "system.observe",
+          "args": {
+            "deadlineMs": 5000,
+            "deadlinePolicy": "driver_must_override_for_declared_long_operations"
+          }
+        }
+      ],
+      "expected": {
+        "narrative": "只确认候选，不误发送或停止",
+        "invariants": [
+          "INV05",
+          "INV17",
+          "INV18",
+          "INV25"
+        ]
+      },
+      "requiredLevels": [
+        "L1",
+        "L3",
+        "L4"
+      ],
+      "evidenceRequired": [
+        "structured event/control trace with stable IDs",
+        "independent state/side-effect oracle",
+        "real adapter evidence for each claimed L2/L3 result"
+      ]
+    },
+    {
+      "id": "UX-006",
+      "area": "UX",
+      "title": "语音重复片段",
+      "priority": "P1",
+      "status": "PLANNED",
+      "implementationRequired": true,
+      "given": {
+        "fixtureId": "desktop-frontstage",
+        "variantId": "UX-006",
+        "premise": "同段转写重复交付描述"
+      },
+      "steps": [
+        {
+          "op": "fixture.prepare",
+          "args": {
+            "fixtureId": "desktop-frontstage",
+            "variantId": "UX-006"
+          }
+        },
+        {
+          "op": "user.say",
+          "args": {
+            "text": "那就做A，做A就行，先做A"
+          }
+        },
+        {
+          "op": "system.observe",
+          "args": {
+            "deadlineMs": 5000,
+            "deadlinePolicy": "driver_must_override_for_declared_long_operations"
+          }
+        }
+      ],
+      "expected": {
+        "narrative": "单一意图受理，不重复开工",
+        "invariants": [
+          "INV05",
+          "INV17",
+          "INV18",
+          "INV25"
+        ]
+      },
+      "requiredLevels": [
+        "L1",
+        "L3",
+        "L4"
+      ],
+      "evidenceRequired": [
+        "structured event/control trace with stable IDs",
+        "independent state/side-effect oracle",
+        "real adapter evidence for each claimed L2/L3 result"
+      ]
+    },
+    {
+      "id": "UX-007",
+      "area": "UX",
+      "title": "拖卡不是开工",
+      "priority": "P1",
+      "status": "PLANNED",
+      "implementationRequired": true,
+      "given": {
+        "fixtureId": "desktop-frontstage",
+        "variantId": "UX-007",
+        "premise": "拖入T_A但未发送"
+      },
+      "steps": [
+        {
+          "op": "fixture.prepare",
+          "args": {
+            "fixtureId": "desktop-frontstage",
+            "variantId": "UX-007"
+          }
+        },
+        {
+          "op": "ui.act",
+          "args": {
+            "action": "拖任务卡入输入框"
+          }
+        },
+        {
+          "op": "system.observe",
+          "args": {
+            "deadlineMs": 5000,
+            "deadlinePolicy": "driver_must_override_for_declared_long_operations"
+          }
+        }
+      ],
+      "expected": {
+        "narrative": "只形成引用，不立即执行",
+        "invariants": [
+          "INV05",
+          "INV17",
+          "INV18",
+          "INV25"
+        ]
+      },
+      "requiredLevels": [
+        "L1",
+        "L3",
+        "L4"
+      ],
+      "evidenceRequired": [
+        "structured event/control trace with stable IDs",
+        "independent state/side-effect oracle",
+        "real adapter evidence for each claimed L2/L3 result"
+      ]
+    },
+    {
+      "id": "UX-008",
+      "area": "UX",
+      "title": "取消不是删除",
+      "priority": "P1",
+      "status": "PLANNED",
+      "implementationRequired": true,
+      "given": {
+        "fixtureId": "desktop-frontstage",
+        "variantId": "UX-008",
+        "premise": "用户停止本轮工作"
+      },
+      "steps": [
+        {
+          "op": "fixture.prepare",
+          "args": {
+            "fixtureId": "desktop-frontstage",
+            "variantId": "UX-008"
+          }
+        },
+        {
+          "op": "ui.act",
+          "args": {
+            "action": "查看已停止卡与成果"
+          }
+        },
+        {
+          "op": "system.observe",
+          "args": {
+            "deadlineMs": 5000,
+            "deadlinePolicy": "driver_must_override_for_declared_long_operations"
+          }
+        }
+      ],
+      "expected": {
+        "narrative": "能找到部分成果与继续入口",
+        "invariants": [
+          "INV05",
+          "INV17",
+          "INV18",
+          "INV25"
+        ]
+      },
+      "requiredLevels": [
+        "L1",
+        "L3",
+        "L4"
+      ],
+      "evidenceRequired": [
+        "structured event/control trace with stable IDs",
+        "independent state/side-effect oracle",
+        "real adapter evidence for each claimed L2/L3 result"
+      ]
+    },
+    {
+      "id": "SECURITY-001",
+      "area": "SECURITY",
+      "title": "未认证控制",
+      "priority": "P0",
+      "status": "PLANNED",
+      "implementationRequired": true,
+      "given": {
+        "fixtureId": "security-boundaries",
+        "variantId": "SECURITY-001",
+        "premise": "未配对连接请求stop"
+      },
+      "steps": [
+        {
+          "op": "fixture.prepare",
+          "args": {
+            "fixtureId": "security-boundaries",
+            "variantId": "SECURITY-001"
+          }
+        },
+        {
+          "op": "fault.inject",
+          "args": {
+            "fault": "unauthenticated_control"
+          }
+        },
+        {
+          "op": "system.observe",
+          "args": {
+            "deadlineMs": 5000,
+            "deadlinePolicy": "driver_must_override_for_declared_long_operations"
+          }
+        }
+      ],
+      "expected": {
+        "narrative": "拒绝，不创建owner Peer或控制工作",
+        "invariants": [
+          "INV01",
+          "INV11",
+          "INV16",
+          "INV19"
+        ]
+      },
+      "requiredLevels": [
+        "L1",
+        "L2"
+      ],
+      "evidenceRequired": [
+        "structured event/control trace with stable IDs",
+        "independent state/side-effect oracle",
+        "real adapter evidence for each claimed L2/L3 result"
+      ]
+    },
+    {
+      "id": "SECURITY-002",
+      "area": "SECURITY",
+      "title": "错误owner job",
+      "priority": "P0",
+      "status": "PLANNED",
+      "implementationRequired": true,
+      "given": {
+        "fixtureId": "security-boundaries",
+        "variantId": "SECURITY-002",
+        "premise": "已知jobID但owner不匹配"
+      },
+      "steps": [
+        {
+          "op": "fixture.prepare",
+          "args": {
+            "fixtureId": "security-boundaries",
+            "variantId": "SECURITY-002"
+          }
+        },
+        {
+          "op": "fault.inject",
+          "args": {
+            "fault": "wrong_owner_job_cancel"
+          }
+        },
+        {
+          "op": "system.observe",
+          "args": {
+            "deadlineMs": 5000,
+            "deadlinePolicy": "driver_must_override_for_declared_long_operations"
+          }
+        }
+      ],
+      "expected": {
+        "narrative": "拒绝错误范围，正确worker映射可操作",
+        "invariants": [
+          "INV01",
+          "INV11",
+          "INV16",
+          "INV19"
+        ]
+      },
+      "requiredLevels": [
+        "L1",
+        "L2"
+      ],
+      "evidenceRequired": [
+        "structured event/control trace with stable IDs",
+        "independent state/side-effect oracle",
+        "real adapter evidence for each claimed L2/L3 result"
+      ]
+    },
+    {
+      "id": "SECURITY-003",
+      "area": "SECURITY",
+      "title": "提示注入改卡",
+      "priority": "P0",
+      "status": "PLANNED",
+      "implementationRequired": true,
+      "given": {
+        "fixtureId": "security-boundaries",
+        "variantId": "SECURITY-003",
+        "premise": "外部文档要求删除其他任务"
+      },
+      "steps": [
+        {
+          "op": "fixture.prepare",
+          "args": {
+            "fixtureId": "security-boundaries",
+            "variantId": "SECURITY-003"
+          }
+        },
+        {
+          "op": "fault.inject",
+          "args": {
+            "fault": "untrusted_document_task_instruction"
+          }
+        },
+        {
+          "op": "system.observe",
+          "args": {
+            "deadlineMs": 5000,
+            "deadlinePolicy": "driver_must_override_for_declared_long_operations"
+          }
+        }
+      ],
+      "expected": {
+        "narrative": "不提升文档内容为用户授权",
+        "invariants": [
+          "INV01",
+          "INV11",
+          "INV16",
+          "INV19"
+        ]
+      },
+      "requiredLevels": [
+        "L1",
+        "L2"
+      ],
+      "evidenceRequired": [
+        "structured event/control trace with stable IDs",
+        "independent state/side-effect oracle",
+        "real adapter evidence for each claimed L2/L3 result"
+      ]
+    },
+    {
+      "id": "SECURITY-004",
+      "area": "SECURITY",
+      "title": "秘密进入日志",
+      "priority": "P0",
+      "status": "PLANNED",
+      "implementationRequired": true,
+      "given": {
+        "fixtureId": "security-boundaries",
+        "variantId": "SECURITY-004",
+        "premise": "认证失败带敏感字段"
+      },
+      "steps": [
+        {
+          "op": "fixture.prepare",
+          "args": {
+            "fixtureId": "security-boundaries",
+            "variantId": "SECURITY-004"
+          }
+        },
+        {
+          "op": "fault.inject",
+          "args": {
+            "fault": "secret_in_error_payload"
+          }
+        },
+        {
+          "op": "system.observe",
+          "args": {
+            "deadlineMs": 5000,
+            "deadlinePolicy": "driver_must_override_for_declared_long_operations"
+          }
+        }
+      ],
+      "expected": {
+        "narrative": "脱敏报告，Client无长期秘密",
+        "invariants": [
+          "INV01",
+          "INV11",
+          "INV16",
+          "INV19"
+        ]
+      },
+      "requiredLevels": [
+        "L1",
+        "L2"
+      ],
+      "evidenceRequired": [
+        "structured event/control trace with stable IDs",
+        "independent state/side-effect oracle",
+        "real adapter evidence for each claimed L2/L3 result"
+      ]
+    },
+    {
+      "id": "SECURITY-005",
+      "area": "SECURITY",
+      "title": "权限根错误",
+      "priority": "P0",
+      "status": "PLANNED",
+      "implementationRequired": true,
+      "given": {
+        "fixtureId": "security-boundaries",
+        "variantId": "SECURITY-005",
+        "premise": "worker cwd与sandbox根不一致"
+      },
+      "steps": [
+        {
+          "op": "fixture.prepare",
+          "args": {
+            "fixtureId": "security-boundaries",
+            "variantId": "SECURITY-005"
+          }
+        },
+        {
+          "op": "fault.inject",
+          "args": {
+            "fault": "wrong_project_permission_root"
+          }
+        },
+        {
+          "op": "system.observe",
+          "args": {
+            "deadlineMs": 5000,
+            "deadlinePolicy": "driver_must_override_for_declared_long_operations"
+          }
+        }
+      ],
+      "expected": {
+        "narrative": "执行前阻塞，不能用cwd表象通过",
+        "invariants": [
+          "INV01",
+          "INV11",
+          "INV16",
+          "INV19"
+        ]
+      },
+      "requiredLevels": [
+        "L1",
+        "L2"
+      ],
+      "evidenceRequired": [
+        "structured event/control trace with stable IDs",
+        "independent state/side-effect oracle",
+        "real adapter evidence for each claimed L2/L3 result"
+      ]
+    },
+    {
+      "id": "SECURITY-006",
+      "area": "SECURITY",
+      "title": "模型自报结果",
+      "priority": "P0",
+      "status": "PLANNED",
+      "implementationRequired": true,
+      "given": {
+        "fixtureId": "security-boundaries",
+        "variantId": "SECURITY-006",
+        "premise": "Agent声称已完成但无文件"
+      },
+      "steps": [
+        {
+          "op": "fixture.prepare",
+          "args": {
+            "fixtureId": "security-boundaries",
+            "variantId": "SECURITY-006"
+          }
+        },
+        {
+          "op": "fault.inject",
+          "args": {
+            "fault": "assistant_claim_without_effect"
+          }
+        },
+        {
+          "op": "system.observe",
+          "args": {
+            "deadlineMs": 5000,
+            "deadlinePolicy": "driver_must_override_for_declared_long_operations"
+          }
+        }
+      ],
+      "expected": {
+        "narrative": "硬oracle失败，不根据自述通过",
+        "invariants": [
+          "INV01",
+          "INV11",
+          "INV16",
+          "INV19"
+        ]
+      },
+      "requiredLevels": [
+        "L1",
+        "L2"
+      ],
+      "evidenceRequired": [
+        "structured event/control trace with stable IDs",
+        "independent state/side-effect oracle",
+        "real adapter evidence for each claimed L2/L3 result"
+      ]
+    },
+    {
+      "id": "PERF-001",
+      "area": "PERF",
+      "title": "控制不等模型",
+      "priority": "P1",
+      "status": "PLANNED",
+      "implementationRequired": true,
+      "given": {
+        "fixtureId": "performance-fixture",
+        "variantId": "PERF-001",
+        "premise": "主模型请求故意阻塞"
+      },
+      "steps": [
+        {
+          "op": "fixture.prepare",
+          "args": {
+            "fixtureId": "performance-fixture",
+            "variantId": "PERF-001"
+          }
+        },
+        {
+          "op": "ui.act",
+          "args": {
+            "action": "点击停止后台R_A"
+          }
+        },
+        {
+          "op": "system.observe",
+          "args": {
+            "deadlineMs": 5000,
+            "deadlinePolicy": "driver_must_override_for_declared_long_operations"
+          }
+        }
+      ],
+      "expected": {
+        "narrative": "控制ACK不排队等模型，按真实时钟测量",
+        "invariants": [
+          "INV12",
+          "INV21",
+          "INV22",
+          "INV24"
+        ]
+      },
+      "requiredLevels": [
+        "L1",
+        "L2",
+        "L3"
+      ],
+      "evidenceRequired": [
+        "structured event/control trace with stable IDs",
+        "independent state/side-effect oracle",
+        "real adapter evidence for each claimed L2/L3 result"
+      ]
+    },
+    {
+      "id": "PERF-002",
+      "area": "PERF",
+      "title": "增量进度",
+      "priority": "P1",
+      "status": "PLANNED",
+      "implementationRequired": true,
+      "given": {
+        "fixtureId": "performance-fixture",
+        "variantId": "PERF-002",
+        "premise": "大量无模型状态变化"
+      },
+      "steps": [
+        {
+          "op": "fixture.prepare",
+          "args": {
+            "fixtureId": "performance-fixture",
+            "variantId": "PERF-002"
+          }
+        },
+        {
+          "op": "ui.act",
+          "args": {
+            "action": "观察两端进度"
+          }
+        },
+        {
+          "op": "system.observe",
+          "args": {
+            "deadlineMs": 5000,
+            "deadlinePolicy": "driver_must_override_for_declared_long_operations"
+          }
+        }
+      ],
+      "expected": {
+        "narrative": "受控网络下推送达标，不依赖长轮询",
+        "invariants": [
+          "INV12",
+          "INV21",
+          "INV22",
+          "INV24"
+        ]
+      },
+      "requiredLevels": [
+        "L1",
+        "L2",
+        "L3"
+      ],
+      "evidenceRequired": [
+        "structured event/control trace with stable IDs",
+        "independent state/side-effect oracle",
+        "real adapter evidence for each claimed L2/L3 result"
+      ]
+    },
+    {
+      "id": "PERF-003",
+      "area": "PERF",
+      "title": "长历史",
+      "priority": "P1",
+      "status": "PLANNED",
+      "implementationRequired": true,
+      "given": {
+        "fixtureId": "performance-fixture",
+        "variantId": "PERF-003",
+        "premise": "上万条合成历史"
+      },
+      "steps": [
+        {
+          "op": "fixture.prepare",
+          "args": {
+            "fixtureId": "performance-fixture",
+            "variantId": "PERF-003"
+          }
+        },
+        {
+          "op": "ui.act",
+          "args": {
+            "action": "打开主入口"
+          }
+        },
+        {
+          "op": "system.observe",
+          "args": {
+            "deadlineMs": 5000,
+            "deadlinePolicy": "driver_must_override_for_declared_long_operations"
+          }
+        }
+      ],
+      "expected": {
+        "narrative": "分页与有限缓存，首屏不等待全量",
+        "invariants": [
+          "INV12",
+          "INV21",
+          "INV22",
+          "INV24"
+        ]
+      },
+      "requiredLevels": [
+        "L1",
+        "L2",
+        "L3"
+      ],
+      "evidenceRequired": [
+        "structured event/control trace with stable IDs",
+        "independent state/side-effect oracle",
+        "real adapter evidence for each claimed L2/L3 result"
+      ]
+    },
+    {
+      "id": "PERF-004",
+      "area": "PERF",
+      "title": "慢Client",
+      "priority": "P1",
+      "status": "PLANNED",
+      "implementationRequired": true,
+      "given": {
+        "fixtureId": "performance-fixture",
+        "variantId": "PERF-004",
+        "premise": "流消费者变慢"
+      },
+      "steps": [
+        {
+          "op": "fixture.prepare",
+          "args": {
+            "fixtureId": "performance-fixture",
+            "variantId": "PERF-004"
+          }
+        },
+        {
+          "op": "fault.inject",
+          "args": {
+            "fault": "slow_event_consumer"
+          }
+        },
+        {
+          "op": "system.observe",
+          "args": {
+            "deadlineMs": 5000,
+            "deadlinePolicy": "driver_must_override_for_declared_long_operations"
+          }
+        }
+      ],
+      "expected": {
+        "narrative": "背压有界，其他连接不被永久拖住",
+        "invariants": [
+          "INV12",
+          "INV21",
+          "INV22",
+          "INV24"
+        ]
+      },
+      "requiredLevels": [
+        "L1",
+        "L2",
+        "L3"
+      ],
+      "evidenceRequired": [
+        "structured event/control trace with stable IDs",
+        "independent state/side-effect oracle",
+        "real adapter evidence for each claimed L2/L3 result"
+      ]
+    },
+    {
+      "id": "PERF-005",
+      "area": "PERF",
+      "title": "低成本概览",
+      "priority": "P1",
+      "status": "PLANNED",
+      "implementationRequired": true,
+      "given": {
+        "fixtureId": "performance-fixture",
+        "variantId": "PERF-005",
+        "premise": "二十项目但只有一项目变化"
+      },
+      "steps": [
+        {
+          "op": "fixture.prepare",
+          "args": {
+            "fixtureId": "performance-fixture",
+            "variantId": "PERF-005"
+          }
+        },
+        {
+          "op": "user.say",
+          "args": {
+            "text": "今天哪个任务好推进"
+          }
+        },
+        {
+          "op": "system.observe",
+          "args": {
+            "deadlineMs": 5000,
+            "deadlinePolicy": "driver_must_override_for_declared_long_operations"
+          }
+        }
+      ],
+      "expected": {
+        "narrative": "读索引和相关增量，不全量注入所有项目",
+        "invariants": [
+          "INV12",
+          "INV21",
+          "INV22",
+          "INV24"
+        ]
+      },
+      "requiredLevels": [
+        "L1",
+        "L2",
+        "L3"
+      ],
+      "evidenceRequired": [
+        "structured event/control trace with stable IDs",
+        "independent state/side-effect oracle",
+        "real adapter evidence for each claimed L2/L3 result"
+      ]
+    },
+    {
+      "id": "PERF-006",
+      "area": "PERF",
+      "title": "资源浸泡",
+      "priority": "P1",
+      "status": "PLANNED",
+      "implementationRequired": true,
+      "given": {
+        "fixtureId": "performance-fixture",
+        "variantId": "PERF-006",
+        "premise": "六十分钟重连/运行"
+      },
+      "steps": [
+        {
+          "op": "fixture.prepare",
+          "args": {
+            "fixtureId": "performance-fixture",
+            "variantId": "PERF-006"
+          }
+        },
+        {
+          "op": "fault.inject",
+          "args": {
+            "fault": "soak_reconnect_and_work"
+          }
+        },
+        {
+          "op": "system.observe",
+          "args": {
+            "deadlineMs": 5000,
+            "deadlinePolicy": "driver_must_override_for_declared_long_operations"
+          }
+        }
+      ],
+      "expected": {
+        "narrative": "无持续socket/子进程/订阅增长",
+        "invariants": [
+          "INV12",
+          "INV21",
+          "INV22",
+          "INV24"
+        ]
+      },
+      "requiredLevels": [
+        "L1",
+        "L2",
+        "L3"
+      ],
+      "evidenceRequired": [
+        "structured event/control trace with stable IDs",
+        "independent state/side-effect oracle",
+        "real adapter evidence for each claimed L2/L3 result"
+      ]
+    },
+    {
+      "id": "RELEASE-001",
+      "area": "RELEASE",
+      "title": "真实profile安装",
+      "priority": "P0",
+      "status": "PLANNED",
+      "implementationRequired": true,
+      "given": {
+        "fixtureId": "install-existing-profile",
+        "variantId": "RELEASE-001",
+        "premise": "现有DSH有会话与其他插件"
+      },
+      "steps": [
+        {
+          "op": "fixture.prepare",
+          "args": {
+            "fixtureId": "install-existing-profile",
+            "variantId": "RELEASE-001"
+          }
+        },
+        {
+          "op": "ui.act",
+          "args": {
+            "action": "安装打包插件"
+          }
+        },
+        {
+          "op": "system.observe",
+          "args": {
+            "deadlineMs": 5000,
+            "deadlinePolicy": "driver_must_override_for_declared_long_operations"
+          }
+        }
+      ],
+      "expected": {
+        "narrative": "原数据保留，实际加载版本可核对",
+        "invariants": [
+          "INV02",
+          "INV19",
+          "INV20",
+          "INV24"
+        ]
+      },
+      "requiredLevels": [
+        "L1",
+        "L2",
+        "L3"
+      ],
+      "evidenceRequired": [
+        "structured event/control trace with stable IDs",
+        "independent state/side-effect oracle",
+        "real adapter evidence for each claimed L2/L3 result"
+      ]
+    },
+    {
+      "id": "RELEASE-002",
+      "area": "RELEASE",
+      "title": "回滚遇新修改",
+      "priority": "P0",
+      "status": "PLANNED",
+      "implementationRequired": true,
+      "given": {
+        "fixtureId": "install-existing-profile",
+        "variantId": "RELEASE-002",
+        "premise": "安装后用户改其他配置"
+      },
+      "steps": [
+        {
+          "op": "fixture.prepare",
+          "args": {
+            "fixtureId": "install-existing-profile",
+            "variantId": "RELEASE-002"
+          }
+        },
+        {
+          "op": "ui.act",
+          "args": {
+            "action": "回滚本插件"
+          }
+        },
+        {
+          "op": "system.observe",
+          "args": {
+            "deadlineMs": 5000,
+            "deadlinePolicy": "driver_must_override_for_declared_long_operations"
+          }
+        }
+      ],
+      "expected": {
+        "narrative": "不整文件覆盖后来改动",
+        "invariants": [
+          "INV02",
+          "INV19",
+          "INV20",
+          "INV24"
+        ]
+      },
+      "requiredLevels": [
+        "L1",
+        "L2",
+        "L3"
+      ],
+      "evidenceRequired": [
+        "structured event/control trace with stable IDs",
+        "independent state/side-effect oracle",
+        "real adapter evidence for each claimed L2/L3 result"
+      ]
+    },
+    {
+      "id": "RELEASE-003",
+      "area": "RELEASE",
+      "title": "源码外安装",
+      "priority": "P0",
+      "status": "PLANNED",
+      "implementationRequired": true,
+      "given": {
+        "fixtureId": "install-existing-profile",
+        "variantId": "RELEASE-003",
+        "premise": "只提供tarball"
+      },
+      "steps": [
+        {
+          "op": "fixture.prepare",
+          "args": {
+            "fixtureId": "install-existing-profile",
+            "variantId": "RELEASE-003"
+          }
+        },
+        {
+          "op": "ui.act",
+          "args": {
+            "action": "隔离安装与加载"
+          }
+        },
+        {
+          "op": "system.observe",
+          "args": {
+            "deadlineMs": 5000,
+            "deadlinePolicy": "driver_must_override_for_declared_long_operations"
+          }
+        }
+      ],
+      "expected": {
+        "narrative": "无源码路径依赖，生成资源可解析",
+        "invariants": [
+          "INV02",
+          "INV19",
+          "INV20",
+          "INV24"
+        ]
+      },
+      "requiredLevels": [
+        "L1",
+        "L2",
+        "L3"
+      ],
+      "evidenceRequired": [
+        "structured event/control trace with stable IDs",
+        "independent state/side-effect oracle",
+        "real adapter evidence for each claimed L2/L3 result"
+      ]
+    },
+    {
+      "id": "RELEASE-004",
+      "area": "RELEASE",
+      "title": "Mock不能冒充实机",
+      "priority": "P0",
+      "status": "PLANNED",
+      "implementationRequired": true,
+      "given": {
+        "fixtureId": "install-existing-profile",
+        "variantId": "RELEASE-004",
+        "premise": "只有stub结果无Mac"
+      },
+      "steps": [
+        {
+          "op": "fixture.prepare",
+          "args": {
+            "fixtureId": "install-existing-profile",
+            "variantId": "RELEASE-004"
+          }
+        },
+        {
+          "op": "ui.act",
+          "args": {
+            "action": "生成验收报告"
+          }
+        },
+        {
+          "op": "system.observe",
+          "args": {
+            "deadlineMs": 5000,
+            "deadlinePolicy": "driver_must_override_for_declared_long_operations"
+          }
+        }
+      ],
+      "expected": {
+        "narrative": "Mac/真DSH项BLOCKED，不写全通过",
+        "invariants": [
+          "INV02",
+          "INV19",
+          "INV20",
+          "INV24"
+        ]
+      },
+      "requiredLevels": [
+        "L1",
+        "L2",
+        "L3"
+      ],
+      "evidenceRequired": [
+        "structured event/control trace with stable IDs",
+        "independent state/side-effect oracle",
+        "real adapter evidence for each claimed L2/L3 result"
+      ]
+    },
+    {
+      "id": "RELEASE-005",
+      "area": "RELEASE",
+      "title": "未实现动作",
+      "priority": "P0",
+      "status": "PLANNED",
+      "implementationRequired": true,
+      "given": {
+        "fixtureId": "install-existing-profile",
+        "variantId": "RELEASE-005",
+        "premise": "runner缺一个op/oracle"
+      },
+      "steps": [
+        {
+          "op": "fixture.prepare",
+          "args": {
+            "fixtureId": "install-existing-profile",
+            "variantId": "RELEASE-005"
+          }
+        },
+        {
+          "op": "fault.inject",
+          "args": {
+            "fault": "unimplemented_validation_operation"
+          }
+        },
+        {
+          "op": "system.observe",
+          "args": {
+            "deadlineMs": 5000,
+            "deadlinePolicy": "driver_must_override_for_declared_long_operations"
+          }
+        }
+      ],
+      "expected": {
+        "narrative": "明确NOT_IMPLEMENTED并阻塞，不静默PASS",
+        "invariants": [
+          "INV02",
+          "INV19",
+          "INV20",
+          "INV24"
+        ]
+      },
+      "requiredLevels": [
+        "L1",
+        "L2",
+        "L3"
+      ],
+      "evidenceRequired": [
+        "structured event/control trace with stable IDs",
+        "independent state/side-effect oracle",
+        "real adapter evidence for each claimed L2/L3 result"
+      ]
+    },
+    {
+      "id": "RELEASE-006",
+      "area": "RELEASE",
+      "title": "公开包脱敏",
+      "priority": "P0",
+      "status": "PLANNED",
+      "implementationRequired": true,
+      "given": {
+        "fixtureId": "install-existing-profile",
+        "variantId": "RELEASE-006",
+        "premise": "产物含样例与运行报告"
+      },
+      "steps": [
+        {
+          "op": "fixture.prepare",
+          "args": {
+            "fixtureId": "install-existing-profile",
+            "variantId": "RELEASE-006"
+          }
+        },
+        {
+          "op": "ui.act",
+          "args": {
+            "action": "检查发布文件清单"
+          }
+        },
+        {
+          "op": "system.observe",
+          "args": {
+            "deadlineMs": 5000,
+            "deadlinePolicy": "driver_must_override_for_declared_long_operations"
+          }
+        }
+      ],
+      "expected": {
+        "narrative": "无真实凭据/个人记录，许可与来源完整",
+        "invariants": [
+          "INV02",
+          "INV19",
+          "INV20",
+          "INV24"
+        ]
+      },
+      "requiredLevels": [
+        "L1",
+        "L2",
+        "L3"
+      ],
+      "evidenceRequired": [
+        "structured event/control trace with stable IDs",
+        "independent state/side-effect oracle",
+        "real adapter evidence for each claimed L2/L3 result"
+      ]
+    }
+  ]
+}

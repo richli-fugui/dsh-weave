@@ -1,0 +1,71 @@
+# Dependencies and generated output
+node_modules/
+dist/
+build/
+lib/
+.artifacts/
+coverage/
+*.tsbuildinfo
+*.tgz
+*.log
+*.tmp
+
+# Environment and local overrides
+.env
+.env.*
+!.env.example
+*.local.*
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Machine-private state, credentials and deployment artifacts
+.workbench/
+.runtime/
+.private/
+.local/
+data/
+backups/
+deployments/
+logs/
+reports/private/
+evidence/private/
+*.pem
+*.key
+*.p12
+*.pfx
+*.kdbx
+*.sqlite
+*.sqlite3
+*.sqlite-*
+*.db
+*.db-*
+*credentials*.json
+*cookie*.json
+*token*.json
+ssh_config
+known_hosts
+id_rsa*
+id_ed25519*
+
+# Browser/test output can contain real session content
+playwright-report/
+test-results/
+artifacts/
+
+# Workbench business data and old-card imports
+imports/
+exports/
+*.jsonl
+*.db-shm
+*.db-wal
+
+# Transient Agent handoff ownership
+handoff/.active.json
+handoff/.active.json.*
+
+# Private agent memories and reviewed publication checkout
+.workbuddy/
+.zwork/
+.public-export/
