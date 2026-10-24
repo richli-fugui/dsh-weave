@@ -36,7 +36,7 @@
     },
     {
       "path": "docs/ACCEPTANCE.md",
-      "sha256": "7c261c8355e6fddcc09a431902b453d77627f8ab3db78c5659fbdf2781ce4bb1"
+      "sha256": "d6c59978b691f5cc510df98fc706b9a6a89ccbb8af3bdb4a090569fc7c86394a"
     },
     {
       "path": "docs/ARCHITECTURE.md",
@@ -72,7 +72,7 @@
     },
     {
       "path": "docs/PUBLICATION.md",
-      "sha256": "dd85fccf0d3400303c8eb571e97a32cd3a8d1748d004e0226e051dcde81778b3"
+      "sha256": "e34b1a89a892176f5eae5909cc82940cb733776ee554d25e64b1a5c0f9ede6f6"
     },
     {
       "path": "docs/REMOTECONNECT_CONTRACT.md",
@@ -84,7 +84,7 @@
     },
     {
       "path": "docs/STATUS.md",
-      "sha256": "97673dcdb2a9eaa2ee4c6e43d4bdc7c78a603f4b7c04e75d5fe16eccb5596529"
+      "sha256": "1677a8b093eadde923dc3d209f3e5224e2f8772c124c4305de3712434df9a278"
     },
     {
       "path": "docs/VALIDATION_HANDOFF.md",
@@ -116,7 +116,7 @@
     },
     {
       "path": "handoff/03-STATE.md",
-      "sha256": "955b2dee6a724c1b97b9d2b88d2585b7d4e900f02cfc83579402c057276a3baa"
+      "sha256": "6146983cc5d68518b145bbc2816238e1c3a1c239515cbf8d53dac9e5e43dc068"
     },
     {
       "path": "handoff/04-LOG.md",
@@ -164,7 +164,7 @@
     },
     {
       "path": "handoff/rounds/20261024-2310-continuity-publication.md",
-      "sha256": "987f3f7669c255019e698549a88b8584bb6470cdafe93083aacb5335d4fef35f"
+      "sha256": "1522f5407aeba82d77d2c840644014e212c6bd808890c8061b4c1641170a014e"
     },
     {
       "path": "handoff/templates/ROUND.md",

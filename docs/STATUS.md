@@ -8,4 +8,4 @@
 
 共享 desktop 被另一个施工轮次使用，本轮未安装或重启，旧已装 0.1.0 保留。原生桌面本轮访问超时，NOT_RUN；Mac BLOCKED。主入口宿主 pending/晚到回复/停止联动（T-017）、独立项目根 Worker（T-002）是核心余项。历史 13/13 API 断言含阻塞与超时，不代表真实业务完成。
 
-公开资料使用独立 .public-export checkout；不提交本机原始 evidence、截图、数据库、真实会话或个人路径。上传完成状态见最新轮次的补记。
+公开资料使用独立 .public-export checkout；不提交本机原始 evidence、截图、数据库、真实会话或个人路径。已推送指定 GitHub main；93个文本文件逐一审计、提交作者为中立项目署名。具体SHA见最新轮次补记。

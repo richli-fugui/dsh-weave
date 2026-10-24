@@ -21,6 +21,6 @@
 | A15 | 原 profile 安装/备份/回滚 | 历史部分；候选 NOT_RUN | 旧 0.1.0 仍运行；0.1.1 未部署，避免与另一 Agent 冲突 |
 | A16 | 真 Mac 证据 | BLOCKED | 无 Mac |
 | A17 | MD 只读/预览/幂等 | PASS（UNIT） | importer 回归，无真实业务迁移 |
-| A18 | 公开隐私及许可 | 准备完成，上传另记 | 白名单导出、逐文件扫描、版权保留；实际 Git 索引及上传需收尾核验 |
+| A18 | 公开隐私及许可 | PASS（公开源码范围） | 白名单导出、版权保留、实际Git索引93文件审计与main推送通过；真实数据/截图/原始证据未上传 |
 
 实际验证：独立脱敏副本 npm ci --ignore-scripts --legacy-peer-deps、build、typecheck 成功；106 项 105 PASS+1 SKIP。三轮真实模型仅新 builder，经旧安装宿主入口；不等同新候选原生桌面。tarball 69 文件隐私/Host 导入/Client 懒注册与工厂解析通过，原生 Client NOT_RUN。原始证据保留本机 evidence/private，不公开。

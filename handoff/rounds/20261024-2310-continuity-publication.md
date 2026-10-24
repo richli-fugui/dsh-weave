@@ -4,7 +4,7 @@
 
 ## 1. 身份与输入
 - projectId / 实际绝对根目录：dsh-table / <LOCAL_PATH>
-- roundId / 开始与结束时间：20261024-2310-continuity-publication / 2026-10-24 23:10 至本轮补记（Asia/Shanghai）。
+- roundId / 开始与结束时间：20261024-2310-continuity-publication / 2026-10-24 23:10 至23:50（Asia/Shanghai）。
 - Agent或工具 / 模型：Codex；本会话模型精确标识不可见，不虚构。实际测试宿主模型 openai-codex/gpt-6-luna。
 - 上一轮：[20261024-2045-host-session-bridge](20261024-2045-host-session-bridge.md)。
 - 输入版本：原工作区 Git main 无提交，全部 untracked，保留既有内容；不重置。输入 index.ts SHA-256 c68c90a760bb7bf8377ddfbfa695a789797bb73bd321073419c50e7abe3b0965，host-session.ts 5fcdeae2d83e1c49bec243429b4adf96bb0c91e0fa626ff9d74c043471d0c8da；包 8a809d2d63dc77e3d297878dd0eebb718117ed19a519e3411d6b237d67d346f7。
@@ -54,7 +54,7 @@
 | 当前候选原生桌面 | 0.1.1 DESKTOP | Computer Use选到真实DSH窗口，但访问请求超时；没有绕过访问控制 | NOT_RUN | 工具返回“Computer Use app approval timed out” |
 | 当前候选真实宿主安装 | 0.1.1 HOST集成 | 远程项目占用活跃，无共享部署窗口，不安装或重启 | NOT_RUN | 相邻项目.active只读观察 |
 | 真实Mac | REMOTE | 无设备 | BLOCKED | 无 |
-| 公开索引/提交/推送 | PUBLIC | 具体结果在下方发布补记，不能把导出成功当推送成功 | 待补记 | PUBLIC_MANIFEST.json、Git远端核对 |
+| 公开索引/提交/推送 | PUBLIC | 93文件索引匹配、Git中立署名、push退出0与远端SHA一致 | PASS | PUBLIC_MANIFEST.json、Git远端核对 |
 
 异常与纠正：最初系统 python 仅应用商店别名，不可用，未写入任何代码，随后用Node完成；公开扫描拒绝源码测试里类个人路径，将其改为通用 Projects 路径，扫描测试通过动态合成反例避免自报；没有用替换秘密来绕过扫描。
 
@@ -88,3 +88,13 @@
 - [x] STATE更新、LOG追加、相关旧状态更正。
 - [x] STATIC/MOCK/MODEL/HOST/DESKTOP/REMOTE分开，未测不算PASS。
 - [x] 保留他人改动；本轮只删除自有占用。Git提交/推送获本次用户明确授权，具体结果见补记。
+
+## 发布与结束补记（2026-10-24 23:50 Asia/Shanghai）
+
+- 已完成用户授权的首次推送：[GitHub dsh-weave](https://github.com/richli-fugui/dsh-weave)，main源码提交 a9d745d69c2965a402c0a7d061292c25a86dabb7。git ls-remote 与本地HEAD相同；GitHub连接器独立读取远端 package.json，name=dsh-table、version=0.1.1。
+- 实际Git索引93个文本文件（92白名单文件+PUBLIC_MANIFEST.json）逐一匹配SHA，秘密/用户路径扫描通过；不含evidence、截图、数据库、会话日志或Agent记忆。提交author与committer均DSH Table contributors，邮箱为项目中立noreply，未使用个人Git身份。
+- 原工作区.git未关联远端/未提交；公开历史只在 .public-export/.git，后续通过export→add→audit-public-index→commit/push同步。不要将私有原工作区直接git add。
+- 最终包因README纯空白收整重新打包，hash更新为9b75a0632fc98c14569912c20af68af2772f7957538fbe4badc7118258cad755；69文件重扫通过（首次重扫因Windows tar列表CRLF未剥离而失败，修正分行后通过），包README与最终公开README一致。原先中间包3eb1…不再作为候选证据。
+- 全部业务与验证结论保持上述范围。三轮真实测试在日常主入口留下三组合成输入/回复，未创建验证卡，未清理原历史；T-016已补充。
+- 本次补记、STATE与ACCEPTANCE将单独形成后续文档提交。最终远端HEAD以Git实时查询为准，避免文档自引用当前提交的循环。
+- 结束前仅释放owner=codex-continuity-publication的自有锁；远程项目锁与真实profile未修改。
