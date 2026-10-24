@@ -15,3 +15,5 @@
 | 20261024-2045-host-session-bridge | 2026-10-24 | 接管 token 耗尽中断且无交接的 Agent（autoclay 遗产经实物考古全部成立并保留：DshHostSessionBridge+集成+替身测试，其 GBK 损坏修复验证完整）；真机验证暴露并修复宿主会话桥接空页缺陷（page throughSeq:-1 恒空页→改 snapshotEvents）+ 模型层错误诚实透出 + 复用会话也 pin；三项环境根因实证（workbuddy 渠道内容过滤拒宿主完整提示、deepseek-account 冷启动竞态、同版本重打包须 remove+add）；决定性验证：真实 desktop 宿主 agent loop + 用户指定 gpt-6-luna 回复 replied、assistant_state 绑定真实宿主会话（sessionMode=dsh-session-controller）、13/13 端到端；用户在绑定会话原生实测 ask-user-question 澄清；全量 103 项 102 过 1 跳过；候选包 8a809d2d 已装 desktop | [完整记录](rounds/20261024-2045-host-session-bridge.md) |
 
 | 20261024-2310-continuity-publication | 2026-10-24 | 独立审核并收紧上一轮完成口径；有界入口上下文投影、会话重建去重与宿主错误防双发；0.1.1 候选；105过1跳过，辅助通路真模型3轮通过；候选未部署；白名单脱敏公开及上游许可 | [完整记录](rounds/20261024-2310-continuity-publication.md) |
+
+| 20261025-0005-github-install | 2026-10-25 | 等Remote Connect完成后串行：同仓库预编译GitHub来源0.1.1，隔离安装/Host通过；生产正规CLI安装、69文件与原卡/绑定/配置保留；短测证实旧码未重载后正常完整退出重开，新Host与原生任务台基本界面通过，Mac未验 | [完整记录](rounds/20261025-0005-github-install.md) |

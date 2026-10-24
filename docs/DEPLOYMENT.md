@@ -329,3 +329,11 @@ DSH仍有预发布版本，0.x/rc编号不保证接口稳定。永久免维护�
 ## 2026-10-24 23:45 本轮状态更正
 
 根清单已恢复并验证为 dsh-table@0.1.1，包锁身份一致，engines.dsh 已声明 >=0.2.1-rc.2 <0.3.0。旧“包身份当前阻塞”与“未声明 engines”的观测保留历史，当前不再成立；rc.3 真实验证仍未完成。本候选未部署：远程项目有活跃施工，本轮没有共享 desktop 部署窗口，未改配置、未重启。下一位先按 handoff/03-STATE.md 获取窗口与备份，不把候选静态/模型辅助验证当安装完成。
+
+## 2026-10-25：Windows已切GitHub0.1.1
+
+来源固定为github:richli-fugui/dsh-weave#c6f36711a4e1833f8b9fc11fe1175bf638dccd60，预编译安装分支codex/packages，详见GITHUB_INSTALL.md。随包CLI支持GitHub spec，实际载体为固定commit codeload tarball；隔离安装/Host先通过，再等另一插件013轮完整完成后串行安装。--ignore-scripts不需要新增构建许可；保留原pnpm-workspace和其他GitHub依赖。
+
+原profile及一致SQLite备份已做。69文件比对、原23卡和绑定、配置/其他依赖保留。原生插件页显示0.1.1仍不能单独证明新代码加载：本轮一条短消息证实旧进程仍执行旧路径，所以通过应用菜单“应用→退出”正常完整退出，再由原应用入口重开。不同于只关窗口，已独立核对旧后台全部退出、新进程晚于安装。退出时没有警告弹窗，无通杀/强杀操作。新Host与原生任务台基本界面均通过；当前新候选MODEL业务和Mac不因此通过。
+
+精确私有备份位置见.runtime/github-install-20261025/backup-location.json。选择性撤回只装该目录previous-install.tgz，不覆盖整个profile或恢复旧DB。备份存在/可检查，真实生产回滚NOT_RUN。

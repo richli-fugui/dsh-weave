@@ -1,11 +1,9 @@
 # 当前状态
 
-2026-10-24。权威状态：[handoff/03-STATE.md](../handoff/03-STATE.md)，本轮：[20261024-2310-continuity-publication](../handoff/rounds/20261024-2310-continuity-publication.md)。
+2026-10-25。权威摘要：[handoff/03-STATE.md](../handoff/03-STATE.md)，最新轮次：[20261025-0005-github-install](../handoff/rounds/20261025-0005-github-install.md)。
 
-0.1.1 源码候选已补有界入口历史投影、防宿主错误后重复投其他模型、包锁一致性、上游许可与公开脱敏流程。独立脱敏副本完成依赖安装、构建、类型检查及 105 PASS+1 SKIP。
+Windows日常desktop已从本地0.1.0切换为GitHub固定来源0.1.1：github:richli-fugui/dsh-weave#c6f36711a4e1833f8b9fc11fe1175bf638dccd60。等待Remote Connect完成后独占安装；原生菜单正常完整退出重开，新Host和任务台基本界面通过。69文件、23卡、原项目/任务ID/assistant绑定、配置及其他依赖均核对保留；Remote Connect0.1.18运行文件和health仍正常。
 
-新上下文构造器通过现有已安装宿主进行三轮真实 gpt-6-luna 合成对话；候选集成尚未部署，不能据此声称新包已运行。候选 tarball SHA-256 9b75a0632fc98c14569912c20af68af2772f7957538fbe4badc7118258cad755。
+一致备份已做，位置保留本机私有记录。typecheck与105 PASS+1 SKIP；1次短模型测试仅用来识别重开前旧路径，重开后的新候选未新增MODEL场景。Mac仍BLOCKED。T-017、宿主Worker与长历史/pending迁移仍开放，不能把安装完成当完整产品验收。
 
-共享 desktop 被另一个施工轮次使用，本轮未安装或重启，旧已装 0.1.0 保留。原生桌面本轮访问超时，NOT_RUN；Mac BLOCKED。主入口宿主 pending/晚到回复/停止联动（T-017）、独立项目根 Worker（T-002）是核心余项。历史 13/13 API 断言含阻塞与超时，不代表真实业务完成。
-
-公开资料使用独立 .public-export checkout；不提交本机原始 evidence、截图、数据库、真实会话或个人路径。已推送指定 GitHub main；93个文本文件逐一审计、提交作者为中立项目署名。具体SHA见最新轮次补记。
+源码main与codex/packages安装分支分别维护；固定包提交由PACKAGE_PROVENANCE.json定位，不在设备运行构建脚本。公开材料无原始证据、截图、业务库或凭据。

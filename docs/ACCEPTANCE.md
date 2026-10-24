@@ -1,12 +1,12 @@
 # 工作台验收标准
 
-更新：2026-10-24。本表逐项限定范围，权威摘要见 [当前状态](../handoff/03-STATE.md)。本轮 0.1.1 未部署；完整目标未降低。
+更新：2026-10-25。本表逐项限定范围，权威摘要见 [当前状态](../handoff/03-STATE.md)。0.1.1已从GitHub安装并真实重开；完整目标未降低。
 
 | ID | 标准 | 当前状态 | 证据与剩余范围 |
 | --- | --- | --- | --- |
 | A01 | Mac 单主入口，不操作后台窗口 | BLOCKED | 无 Mac；原生会话提问不等同主入口可回答 |
-| A02 | 绑定 Windows 原目录 | PASS（UNIT）；HOST 候选 NOT_RUN | 路径边界回归；真实权限根余项 |
-| A03 | 建卡、拖卡/@、批次 | 部分验证 | 历史桌面操作摘要 5/5；0.1.1 未部署 |
+| A02 | 绑定 Windows 原目录 | PASS（UNIT/本机绑定读取）；权限根余项 | 路径边界回归、原绑定与ID保留；实际Worker权限根仍需A06证据 |
+| A03 | 建卡、拖卡/@、批次 | 部分验证 | 历史桌面操作摘要5/5；0.1.1任务台基本打开通过，未重跑所有操作 |
 | A04 | 目标/依赖/验收/稳定 ID | PASS（UNIT） | 领域回归，不代表所有人工业务验收 |
 | A05 | Windows 单一权威 | IMPLEMENTED_NOT_VERIFIED | 领域权威存在；Mac 模式未实机 |
 | A06 | 真实代码/办公执行与正确权限根 | IMPLEMENTED_NOT_VERIFIED | 文本 Worker 有历史模型正文；宿主 Worker/工具/沙箱仍缺 |
@@ -18,9 +18,11 @@
 | A12 | Mac 离线 Windows 继续 | BLOCKED | 无真实跨设备 |
 | A13 | CAS 与代次边界 | PASS（UNIT/MOCK） | 原契约/边界反例回归保留 |
 | A14 | 独立 Remote Connect | PASS（STATIC） | 不复制认证；实际双设备另外验 |
-| A15 | 原 profile 安装/备份/回滚 | 历史部分；候选 NOT_RUN | 旧 0.1.0 仍运行；0.1.1 未部署，避免与另一 Agent 冲突 |
+| A15 | 原 profile 安装/备份/回滚 | PASS（本轮安装/加载/备份）；回滚未演练 | GitHub0.1.1实际安装、原生正常重开、69文件与配置/卡片/绑定保留；回退包已准备，未实际回滚 |
 | A16 | 真 Mac 证据 | BLOCKED | 无 Mac |
 | A17 | MD 只读/预览/幂等 | PASS（UNIT） | importer 回归，无真实业务迁移 |
-| A18 | 公开隐私及许可 | PASS（公开源码范围） | 白名单导出、版权保留、实际Git索引93文件审计与main推送通过；真实数据/截图/原始证据未上传 |
+| A18 | 公开隐私及许可 | PASS（公开源码范围） | 白名单导出、版权保留、上轮93文本文件及本轮安装分支70文本文件审计通过；当前维护记录按95文本文件索引审计后推送；真实数据/截图/原始证据未上传 |
 
-实际验证：独立脱敏副本 npm ci --ignore-scripts --legacy-peer-deps、build、typecheck 成功；106 项 105 PASS+1 SKIP。三轮真实模型仅新 builder，经旧安装宿主入口；不等同新候选原生桌面。tarball 69 文件隐私/Host 导入/Client 懒注册与工厂解析通过，原生 Client NOT_RUN。原始证据保留本机 evidence/private，不公开。
+实际验证：独立脱敏副本 npm ci --ignore-scripts --legacy-peer-deps、build、typecheck 成功；106 项 105 PASS+1 SKIP。三轮真实模型仅新 builder，经旧安装宿主入口；不等同新候选原生桌面。tarball 69 文件隐私/Host 导入/Client 懒注册与工厂解析通过，原生Client任务台实际打开PASS（基本界面）。原始证据保留本机 evidence/private，不公开。
+
+2026-10-25补记：隔离与生产均真实GitHub固定commit安装；生产Host和原生基本界面通过。新候选完整多轮MODEL、原生权限集中回流、Mac仍未验，安装切换不关闭A06/A07/A09/A10/A16。私有截图与运行报告不公开。

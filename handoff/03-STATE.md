@@ -1,48 +1,45 @@
 # 当前状态：dsh-table
 
-更新时间：2026-10-24 23:50（Asia/Shanghai）。最近交接：[20261024-2310-continuity-publication](rounds/20261024-2310-continuity-publication.md)。
-阶段：**0.1.1 源码候选通过隔离回归，尚未部署**。0.1.0 的宿主主助理回复已成立；T-001/T-004 不能整体关闭，主入口权限交互、长历史与 pending 迁移仍开放。
+更新时间：2026-10-25 02:31（Asia/Shanghai）。最新轮次：[20261025-0005-github-install](rounds/20261025-0005-github-install.md)。
+阶段：**Windows 日常 desktop 已从 GitHub 固定提交安装并真实重开加载0.1.1，原生任务台基本界面通过**。这关闭本轮安装来源切换，不等于完整产品/U1-U6验收。
 
-## 本轮独立审核与交付
+## 当前安装与保留的数据
 
-- 上一轮输入源码与包哈希完全匹配；保留 snapshotEvents 读回复、模型错误提取、复用会话 pin。输入基线 103 项=102 过+1 跳过，类型检查通过。源码替换字符为 0。
-- 当前官方 Windows Desktop 的宿主来自日常 desktop profile；旧安装 dsh-table@0.1.0，host-session.js 与输入构建 SHA-256 同为 609afa35a0e4e5b1…；实际监听 61051，绑定 agent idle，工作台 active/queued/awaiting/unknown 均为 0（检查时事实）。Mac 版本/HOME/profile 未取得。
-- 更正：旧 13/13 是 API 断言，含超时占位及 Worker 阻塞结果，不能等同真实业务完成或新一轮桌面验收。其 JSON 将 desktop 错标为 iso。本轮未重跑会创建卡/调用 Worker 的全套脚本，避免污染日常数据及项目。
-- **连续性修复**：chat_messages 是逻辑入口记录，宿主保留执行原文。每轮附加有界入口历史与当前状态，带回建卡/停止/后台成果；新建会话也走同一路径。历史 JSON ≤5000 字符，每条 ≤1000、最多 10 条，另加既有状态预算。详见 ADR 0002。
-- **防重复派发**：选择宿主后发生提交/回执异常，不再静默向文本桥接重发。仅宿主能力缺席时保留文本降级。会话重建快照已排除当前输入，避免同一轮重复出现。
-- **公开准备**：0.1.1 包与锁身份一致；补上游 MIT 声明；独立 .public-export checkout 只容纳白名单文本，文档去本机用户路径/邮箱/真实会话 ID，原始 evidence、截图、数据库、Agent 记忆均不上传。详见 docs/PUBLICATION.md。已推送 GitHub main，首次源码提交 a9d745d69c2965a402c0a7d061292c25a86dabb7；连接器重新读取远端 package.json 确认0.1.1。实际Git索引93个文本文件逐一匹配清单，未纳入原始证据。公开提交身份为项目中立署名。后续状态补记随下一提交推送，原工作区Git保持无提交。
+- 来源：github:richli-fugui/dsh-weave#c6f36711a4e1833f8b9fc11fe1175bf638dccd60；同仓库codex/packages分支，预编译包0.1.1。源码对应main3150a8db00aa022361fb712919dd05dfcb3cabd2；PACKAGE_PROVENANCE.json可定位69文件SHA-256。
+- 原来源为本机0.1.0 tarball。按用户要求等待Remote Connect013轮完成并释放共享租约后，CreateNew独占安装。官方随包CLI exit0，安装时--ignore-scripts，不添加构建许可、不改实际项目目录。
+- 备份：原清单、patch、pnpm锁/workspace、旧插件完整安装及回退tgz、SQLite一致性备份均已做，存仓库外私有backups。精确位置在本机 .runtime/github-install-20261025/backup-location.json。
+- 安装/重开后：1项目、23卡、29Run、26Result、110聊天消息、1主助理；项目/任务ID、assistant绑定与generation保留。消息由108增至110是一次短连通性测试；没有新建验证卡。patch、workspace、bundles、其他依赖来源均未变。
+- Remote Connect仍0.1.18，28运行文件与其固定commit源码映射逐Git blob匹配；重开后health=ok、官方typert通道仍bound。未改另一项目源码或其占用。
 
-## 分层证据
+## 分层验证
 
-| 层 | 本轮结论与边界 |
+| 层 | 当前结论与边界 |
 | --- | --- |
-| STATIC/UNIT | 源工作区与独立脱敏副本均 build/typecheck 成功；106 项=105 PASS+1 在线模型门禁跳过。新增连续性 2 项、公开扫描 1 项 |
-| PACKAGE | dsh-table@0.1.1，69 文件，解包隐私扫描、Host 导入、Client 懒注册及工厂解析 PASS；这不是原生 Client 运行证明 |
-| MODEL/HOST | 新 context builder 经**已安装旧版宿主 HTTP 入口**完成 3 次 gpt-6-luna 合成对话；第三轮代号/主题/格式/语气/日期/未执行事实均正确，同一宿主会话。验证了新投影的模型可用性，不证明候选 index.ts 已加载。预算：3 个短回合，脚本未派发任务或请求项目文件工具 |
-| DESKTOP | 历史截图与 5/5 操作摘要已审核，证明历史版本界面曾打开/停止链路曾执行。本轮原生窗口自动访问请求超时，未进行新的原生操作，当前候选 NOT_RUN |
-| DEPLOY | NOT_RUN。dsh-remoteconnect 本轮有活跃占用，未拿到共享 desktop 部署窗口；未安装、未重启、未改真实配置或库 |
-| REMOTE/MANUAL | Mac BLOCKED，无本轮人工体验结论 |
+| UNIT/STATIC | 本轮typecheck退出0；106项=105 PASS+1在线模型门禁SKIP；未改业务源码 |
+| INSTALL（隔离+日常） | 同一个GitHub固定commit实际拉取；69运行文件全部匹配；pnpm锁载体为GitHub codeload tarball，不是file/link本机路径 |
+| HOST（隔离） | 官方DSH临时HOME/profile真实启动，项目根完全隔离；projects/control/capabilities PASS，正常shutdown；无模型调用 |
+| HOST（日常） | 02:28经原生应用菜单正常完整退出后重开，新进程晚于安装；项目/卡/assistant/控制/桥接诊断HTTP通过，SQLite quick_check=ok、控制active/queued/awaiting/unknown均0 |
+| DESKTOP | 原生插件页显示GitHub来源和0.1.1；重开后真实任务台打开，23张卡、控制条、主输入与历史可见；不等于新候选所有交互或办公任务通过 |
+| MODEL | 本轮仅一次短消息，在重开前观察到旧路径仍运行；据此没有把安装metadata误认作新代码执行。当前新候选重开后未追加模型测试。上一轮3轮仅新builder经旧安装入口，不迁移为新候选MODEL通过 |
+| REMOTE/Mac | 本轮NOT_RUN，真实Mac仍BLOCKED；0.2.1-rc.3仍未实测 |
 
-本机证据（不上传）：evidence/private/host-continuity-20261024.json、evidence/private/package-0.1.1.json。模型证据只保存断言与会话指纹，未保存私人对话。
-候选：.artifacts/dsh-table-0.1.1.tgz SHA-256 **9b75a0632fc98c14569912c20af68af2772f7957538fbe4badc7118258cad755**。
-旧已装包：.artifacts/dsh-table-0.1.0.tgz SHA-256 8a809d2d63dc77e3d297878dd0eebb718117ed19a519e3411d6b237d67d346f7。两包并存，无数据迁移。
+私有证据：evidence/private/github-production-20261025.json、github-native-panel-20261025.jpg、github-live-source-probe-20261025.json；隔离证据 .runtime/github-install-20261025/report.json。均不上传。
 
 ## 开放问题
 
-| ID | 优先级 | 事实与下一步证据 |
+| 优先级 | ID | 事实与下一步证据 |
 | --- | --- | --- |
-| T-017 主入口宿主控制/交互 | 最高 | 宿主原生提问仍须在后台会话操作；主助理超时后的晚到答复无持久采集；stopAll 主要覆盖 scheduler，尚未覆盖主助理宿主回合。必须实现主入口 pending 投影/作答/停止与持久跟踪，并验证主回合结束后仍可控，不用原生会话另开窗口替代 |
-| T-001/T-004 | 高 | 有界入口投影已实现；候选安装后需实际 API 多轮、重建/重启及超过窗口的关键决定检索。当前 builder 真实模型通过不等同候选集成部署通过 |
-| T-002 | 高 | Worker 仍主要文本桥接，主助理能用宿主不代表 Worker 已有正确权限根/工具审批；需独立项目根宿主 Session 的代码与办公交付证据 |
-| D4-0.1.1 | 高 | 等共享 profile 无其他部署后备份、用 tarball 安装并验证真正加载版本与原生 Client；不抢远程项目锁 |
-| T-007 | 中 | RemoteProvider 替身契约已测，Mac 实机缺席；不能将旧接口草案或 localhost 通过当 U6 完成 |
-| T-016 | 低 | 历史验证卡、乱码消息及本轮三组合成测试输入/回复保留，未擅自清理 |
-| rc.3 | 低 | 允许范围已声明 >=0.2.1-rc.2 <0.3.0；rc.3 仅历史 4 文件 SOURCE_CHECKED，真实 HOST/DESKTOP/REMOTE NOT_RUN，不建议据此直接更新 |
+| 最高 | T-017 | 宿主pending问答/晚到回复/主回合停止仍未统一主入口。实现持久跟踪、投影与作答、停止联动；验收主回合结束后仍可控，不能要求用户操作后台会话 |
+| 高 | T-001/T-004 | 有界入口投影已部署；需新候选原始chat/send用户输入的多轮、重建/重启与长历史决定检索。原verify-host-continuity.mjs会自行注入上下文，只能作builder辅助证据；下一轮先改成raw输入模式，不能让驱动替产品完成交接 |
+| 高 | T-002 | Worker仍主要文本桥接，需独立项目根宿主Session、真实工具/权限与办公/代码交付证据；安装通过不关闭此项 |
+| 中 | T-007 | 远程契约与本机通道不等于真Mac U6，缺设备 |
+| 低 | T-016 | 历史验证卡/乱码、上一轮3组合成消息和本轮1组连通性消息均保留，未擅自清理 |
+| 低 | rc.3 | engines允许>=0.2.1-rc.2 <0.3.0，真实rc.3 HOST/DESKTOP/REMOTE未验，不作兼容保证 |
 
-## 下一位第一条可执行动作
+## 下一位第一条动作
 
-先读 ../dsh-remoteconnect/handoff/.active.json（存在就不抢占），再运行 npm run build && npm run typecheck && npm test。确认共享 desktop 部署窗口、活跃任务与一致备份后，按 docs/DEPLOYMENT.md 安装上述 0.1.1 tarball；保存候选/安装 hash、实际加载版本、原生 Client 可开、原卡与历史不丢的证据。当前端口需重查，不能写死 61051。
+先读本轮记录和docs/GITHUB_INSTALL.md，检查项目/共享租约；typecheck+test应105过1跳过。不需要重新安装或再次重启来“完成”本轮来源切换。只读发现当前官方desktop进程监听后核对GitHub依赖、69文件及控制0；上次端口54793，必须重查，禁止硬编码。
 
-安装后将 RUN_REAL_HOST_CONTINUITY=true 明确开启，运行 node scripts/verify-host-continuity.mjs <port> evidence/private/<unique>.json（最多三短回合），此时才可将证据提升为新候选集成 HOST/MODEL。随后优先实现 T-017；验收必须在主入口回答宿主问题并停止在途主助理，无需切换后台会话。
+之后先将连续性验证器改为直接发送原始用户输入（显式模型开关，最多3个短回合），验证已部署0.1.1，然后推进T-017。不要重跑会向日常项目批量建卡/写成果的旧verify-host-iso全套脚本。
 
-当前无需用户操作；不以无人值守桌面访问超时要求用户排查。下一次原生 D3 验证通过时再给最小预览步骤。
+回退：读取私有backup-location，随包CLI只把dsh-table改回备份的previous-install.tgz，再正常重开并核验；不恢复整份旧profile、不用旧数据库覆盖新消息。回退包已准备，本轮未实际回滚生产。当前无需用户安装/重开，应用已打开任务台。

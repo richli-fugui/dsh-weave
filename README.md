@@ -1,6 +1,6 @@
 # DSH Table（工作台，暂名）
 
-> 当前候选：dsh-table 0.1.1，新增有界入口上下文投影与宿主错误后防重复派发；尚未安装到日常 desktop。上一个 0.1.0 包已在 Windows 官方 DSH 0.2.1-rc.2 运行，真实跨设备未验收。
+> 当前部署：Windows 官方 DSH 0.2.1-rc.2 的日常 desktop 已从 GitHub 固定来源安装并重开加载 dsh-table 0.1.1，原生任务台基本界面通过。完整办公执行、主入口权限交互及真实 Mac 跨设备仍有余项。
 > 更新：2026-10-24（Asia/Shanghai）。项目名和公开包名以后可以调整。
 
 ## 产品目标
@@ -57,7 +57,7 @@ Contexera等项目作为上下文和长期助理机制的参考，不默认同�
 
 ## 当前能安装吗
 
-源码可构建为 tarball。Windows 旧版已存在真实宿主/模型及历史桌面操作证据；当前候选的安装、加载与桌面验收分别记录在 [当前交接](handoff/03-STATE.md)。后台 Worker 仍主要使用文本桥接，原生审批尚未集中回主入口，Mac 实机仍缺失。不要将单次模型回复、脚本 PASS 或原生会话内提问当作整个产品完成。
+源码可构建为 tarball。Windows 旧版已存在真实宿主/模型及历史桌面操作证据；当前安装、加载与桌面验收分别记录在 [当前交接](handoff/03-STATE.md)。后台 Worker 仍主要使用文本桥接，原生审批尚未集中回主入口，Mac 实机仍缺失。不要将单次模型回复、脚本 PASS 或原生会话内提问当作整个产品完成。
 
 开发验证（Node 24；Node 最低版本按 package.json）：
 
@@ -70,7 +70,9 @@ npm test
 
 常规回归不请求在线模型。真实宿主三轮测试必须显式设置 RUN_REAL_HOST_CONTINUITY=true，并使用已核对的本机端口；范围与预算见 scripts/verify-host-continuity.mjs。安装使用明确目标 profile 的官方 Desktop CLI 或插件管理器；先读 [部署规则](docs/DEPLOYMENT.md)，不要直接运行旧 deploy verify 来操作日常数据库。
 
-## GitHub准备与暂名
+## GitHub来源安装与暂名
+
+可安装GitHub版本及维护方式见 [GitHub来源安装](docs/GITHUB_INSTALL.md)。Windows实际部署状态以最新交接为准。
 
 本仓库独立管理。原始文档采用MIT；若改造上游代码，必须先确认并遵守其具体许可证，不能用本仓库MIT覆盖上游许可。
 

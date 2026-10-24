@@ -24,7 +24,7 @@
     },
     {
       "path": "README.md",
-      "sha256": "3bc0280639562b6bd3b5bf13df4afa1ac4b193c249f3d3a70ee05f07454cf8d0"
+      "sha256": "080edba9cf94a7e65648c0b0dac9ab240279a1ef41e7b89b96afd95ac12ab90e"
     },
     {
       "path": "THIRD_PARTY_NOTICES.md",
@@ -36,7 +36,7 @@
     },
     {
       "path": "docs/ACCEPTANCE.md",
-      "sha256": "d6c59978b691f5cc510df98fc706b9a6a89ccbb8af3bdb4a090569fc7c86394a"
+      "sha256": "e4e661e7a2d0cc368d627bbd3a141de69804495568a60c4acac7406cab7bd539"
     },
     {
       "path": "docs/ARCHITECTURE.md",
@@ -56,11 +56,15 @@
     },
     {
       "path": "docs/DEPLOYMENT.md",
-      "sha256": "c0d094e8eee23405c487e6ab1aec5fdf88180775a2b25448622b7b05a03b211b"
+      "sha256": "6b8278dbece329adfadee97fd97f22f9e759507954e9948201822b66e243d8ba"
     },
     {
       "path": "docs/FIELD_MAPPING.md",
       "sha256": "fbfdb8772712cb9a193881ca9574e8ead2f77b7c87e6612ca7955168116ecc77"
+    },
+    {
+      "path": "docs/GITHUB_INSTALL.md",
+      "sha256": "5f7e209730ac3dffc0f5e312329b9c0d0e057c46f5b8d60d44ef991af47b4473"
     },
     {
       "path": "docs/HANDOFF.md",
@@ -84,7 +88,7 @@
     },
     {
       "path": "docs/STATUS.md",
-      "sha256": "1677a8b093eadde923dc3d209f3e5224e2f8772c124c4305de3712434df9a278"
+      "sha256": "ef1e5cdee02b703ed47a3468cbe46234a3f333725d9ada8f1c70ca57a32e7264"
     },
     {
       "path": "docs/VALIDATION_HANDOFF.md",
@@ -116,11 +120,11 @@
     },
     {
       "path": "handoff/03-STATE.md",
-      "sha256": "6146983cc5d68518b145bbc2816238e1c3a1c239515cbf8d53dac9e5e43dc068"
+      "sha256": "4896c53d91a8860e02960cb6eca189bccee72807fb90bc7d175c7b54013e8a03"
     },
     {
       "path": "handoff/04-LOG.md",
-      "sha256": "cc00d69524481d4ae0d1d350c02aca1c97fad74c577a8693a4287ff11b6daabb"
+      "sha256": "a0d81a9af9602278a8399e88eb117a2bc16b4117b602cc91e549cdbe0f2726a6"
     },
     {
       "path": "handoff/CONTINUE_PROMPT.md",
@@ -165,6 +169,10 @@
     {
       "path": "handoff/rounds/20261024-2310-continuity-publication.md",
       "sha256": "1522f5407aeba82d77d2c840644014e212c6bd808890c8061b4c1641170a014e"
+    },
+    {
+      "path": "handoff/rounds/20261025-0005-github-install.md",
+      "sha256": "16b8e747b52e320ae035696d68fcafb499767007e8589dde506085be04958fd6"
     },
     {
       "path": "handoff/templates/ROUND.md",
