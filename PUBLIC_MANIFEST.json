@@ -72,7 +72,7 @@
     },
     {
       "path": "docs/PUBLICATION.md",
-      "sha256": "e34b1a89a892176f5eae5909cc82940cb733776ee554d25e64b1a5c0f9ede6f6"
+      "sha256": "f06a50fc4adf26b42ea6695ad4b03fde6821647a46a33cf680d831fbe1b61b3b"
     },
     {
       "path": "docs/REMOTECONNECT_CONTRACT.md",
@@ -120,7 +120,7 @@
     },
     {
       "path": "handoff/03-STATE.md",
-      "sha256": "fc34e549ebd296b1260c092f1bcfd7bd4440a8d313f6450517d0edc1f1b4986d"
+      "sha256": "500bd7f5e7d6961ceadc7c7bc2daab5c80548f4c12410bb0e4282bcf0ded6fb7"
     },
     {
       "path": "handoff/04-LOG.md",
@@ -192,7 +192,7 @@
     },
     {
       "path": "handoff/rounds/20261025-194927-review-publish.md",
-      "sha256": "bb6dcb17aab310a0e7716a2a74b7d9e9a38603a415d80539e0b331824d3b9c4f"
+      "sha256": "3b4037935301403c679b8e1bd3e3fc21c9f6ad0212fd6d835fda40cd88612137"
     },
     {
       "path": "handoff/templates/ROUND.md",

@@ -2,7 +2,7 @@
 
 更新时间：2026-10-25（Asia/Shanghai）。最新轮次：[20261025-194927-review-publish](rounds/20261025-194927-review-publish.md)。网页审查入口：[REVIEW_GUIDE](../docs/REVIEW_GUIDE.md)。
 
-阶段：**0.1.2 源码审查候选**。用户授权独立审核、改进、脱敏 commit/push 到 GitHub main，供网页审查；不发布 npm、不改安装分支、不重装/重启桌面。
+阶段：**0.1.2 源码审查候选**。用户授权独立审核、改进、脱敏 commit/push 到 GitHub main，供网页审查；实现提交 34ac1a37b4d1e58a3a575dd4974f5ad695a14ba9 已推送并从 GitHub 回读核实。不发布 npm、不改安装分支、不重装/重启桌面。
 
 ## 当前事实
 
@@ -19,7 +19,7 @@
 | --- | --- |
 | STATIC | typecheck、干净构建 PASS；打包 dry-run 69 文件、Host/Client 入口齐全、残留桥接 0 |
 | UNIT/MOCK | 基线重建后 116 PASS；本轮最终 131 PASS，0 FAIL，0 SKIP；7 个先写负例修改前全 FAIL，修复后通过 |
-| 公开副本 | 脱敏源码、完整索引/清单及独立副本复现按最新轮次补记；原始 evidence/数据库/截图/记忆不上传 |
+| 公开副本 | 独立脱敏副本离线安装、typecheck、131 项回归全通过；101 文本文件索引/清单一致；GitHub 固定提交审查页已回读。原始 evidence/数据库/截图/记忆不上传 |
 | MODEL / HOST / DESKTOP / REMOTE / MANUAL | 本轮全部 NOT_RUN；历史证据只属于其当时版本，不自动覆盖 0.1.2 |
 
 ## 开放问题
