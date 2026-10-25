@@ -52,6 +52,30 @@ export const taskPriorityLabel = (priorityCode: string): string => {
   }
 }
 
+/** 运行状态同样只呈现业务语义，不把内部状态码暴露给用户。 */
+export const runStateLabel = (state: string): string => {
+  switch (state) {
+    case 'running':
+      return '推进中'
+    case 'queued':
+      return '排队中'
+    case 'stopping':
+      return '正在停止'
+    case 'awaiting_input':
+      return '等待输入'
+    case 'completed':
+      return '已完成'
+    case 'interrupted':
+      return '已中断'
+    case 'failed':
+      return '失败'
+    case 'unknown':
+      return '结果待核对'
+    default:
+      return '处理中'
+  }
+}
+
 // ================= API Client =================
 async function fetchJson<T>(url: string, options?: RequestInit): Promise<T> {
   const res = await fetch(url, {
@@ -345,8 +369,9 @@ export function WorkbenchView({ onClose }: { onClose?: () => void }) {
     .filter((t) => !selectedProjectId || t.projectId === selectedProjectId)
     .filter((t) => (activeTab === 'all' ? true : t.statusCode === activeTab))
 
+  const awaitingCount = controlSnapshot.awaitingCount ?? 0
   const unknownCount = controlSnapshot.unknownCount ?? controlSnapshot.items.filter(item => item.state === 'unknown').length
-  const isWorking = controlSnapshot.activeCount > 0 || controlSnapshot.queuedCount > 0 || unknownCount > 0
+  const isWorking = controlSnapshot.activeCount > 0 || controlSnapshot.queuedCount > 0 || awaitingCount > 0 || unknownCount > 0
 
   return (
     <div
@@ -464,12 +489,14 @@ export function WorkbenchView({ onClose }: { onClose?: () => void }) {
               }}
             />
             <span style={{ fontWeight: 600, color: isWorking ? '#9a3412' : '#15803d' }}>
-              {unknownCount > 0 ? '有工作等待核对' : isWorking ? '工作推进中' : '执行控制就绪'}
+              {unknownCount > 0 ? '有工作等待核对' : awaitingCount > 0 ? '等待你的回复' : isWorking ? '工作推进中' : '执行控制就绪'}
             </span>
           </div>
 
           <span style={{ color: '#475569' }}>
-            运行中: <strong>{controlSnapshot.activeCount}</strong> 项 · 排队中: <strong>{controlSnapshot.queuedCount}</strong> 项 · 待核对: <strong>{unknownCount}</strong> 项
+            运行中: <strong>{controlSnapshot.activeCount}</strong> 项 · 排队中: <strong>{controlSnapshot.queuedCount}</strong> 项
+            {awaitingCount > 0 && <> · 待回复: <strong>{awaitingCount}</strong> 项</>}
+            {unknownCount > 0 && <> · 待核对: <strong>{unknownCount}</strong> 项</>}
           </span>
 
           {controlSnapshot.items.length > 0 && (
@@ -485,7 +512,7 @@ export function WorkbenchView({ onClose }: { onClose?: () => void }) {
                     borderRadius: '4px',
                   }}
                 >
-                  {item.taskTitle ? item.taskTitle.slice(0, 14) : item.taskId.slice(0, 8)} ({item.state === 'unknown' ? '结果待核对' : item.state})
+                  {item.taskTitle ? item.taskTitle.slice(0, 14) : item.taskId.slice(0, 8)} ({runStateLabel(item.state)})
                 </span>
               ))}
             </div>
@@ -1035,6 +1062,41 @@ export function WorkbenchView({ onClose }: { onClose?: () => void }) {
 }
 
 // ================= DSH 客户端插件装配 =================
+
+/**
+ * 面板级错误边界：任务台自身的渲染异常降级为一张可重试的错误卡，
+ * 绝不让异常冒泡炸掉宿主整个 Web 壳（面板只是宿主 UI 的一个插槽）。
+ * 导出供面板契约回归测试直接验证 getDerivedStateFromError 行为。
+ */
+export class PanelErrorBoundary extends React.Component<
+  { children: React.ReactNode },
+  { error: Error | null }
+> {
+  state: { error: Error | null } = { error: null }
+
+  static getDerivedStateFromError(error: Error) {
+    return { error }
+  }
+
+  render() {
+    if (this.state.error) {
+      return (
+        <div style={{ padding: '24px', color: '#b91c1c', fontSize: '14px', lineHeight: 1.7 }}>
+          <div style={{ fontWeight: 700, marginBottom: '8px' }}>任务台加载出现问题</div>
+          <div style={{ color: '#64748b', marginBottom: '12px' }}>{String(this.state.error?.message ?? this.state.error)}</div>
+          <button
+            onClick={() => this.setState({ error: null })}
+            style={{ padding: '6px 14px', borderRadius: '6px', border: '1px solid #cbd5e1', background: '#fff', cursor: 'pointer' }}
+          >
+            重试
+          </button>
+        </div>
+      )
+    }
+    return this.props.children
+  }
+}
+
 export const name = 'workbench'
 export const inject = ['slots', 'layout']
 
@@ -1050,7 +1112,11 @@ export function apply(ctx: any): () => void {
   if (slots && typeof slots.inject === 'function') {
     try {
       const d1 = slots.inject('main', () =>
-        slots.register({ name: 'main', key: PANEL_ID, label: ENTRY_TITLE }, () => <WorkbenchView />),
+        slots.register({ name: 'main', key: PANEL_ID, label: ENTRY_TITLE }, () => (
+          <PanelErrorBoundary>
+            <WorkbenchView />
+          </PanelErrorBoundary>
+        )),
       )
       if (typeof d1 === 'function') disposers.push(d1)
     } catch (err) {

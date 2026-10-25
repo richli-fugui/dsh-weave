@@ -756,8 +756,39 @@ test('工作台全链路控制与自主维护 E2E 专项验证', async (t) => {
       tools: { register: () => {} },
     }
 
+    // 边界半区使用产品默认执行器（其内置工作区物理边界检查，不得被注入替换）。
     apply(mockCtx, { dbPath: testDbFile })
     const startRunHandler = routes.get('POST /api/workbench/runs/start')
+    const injectExecutorFor = () => {
+      // 成果半区：注入与真实执行器同契约的 executor（WorkBuddy 桥接已移除，成果落盘属执行器职责），
+      // 验证产品把 artifactRefs 完整落到 Result 并回流。
+      return async (task, projectRoot) => {
+      const wbDir = path.join(projectRoot, '.workbench')
+      const runsDir = path.join(wbDir, 'runs')
+      fs.mkdirSync(runsDir, { recursive: true })
+      const ts = new Date().toISOString().replace(/[:.]/g, '-')
+      const versioned = path.join(runsDir, `${task.id}-${ts}.md`)
+      const rootFile = path.join(wbDir, `${task.id}-result.md`)
+      fs.writeFileSync(versioned, `# ${task.title} 交付（历史版本）`, 'utf-8')
+      fs.writeFileSync(rootFile, `# ${task.title} 交付`, 'utf-8')
+      return {
+        state: 'completed',
+        summary: `已交付：${task.title}`,
+        artifactRefs: [{ title: `业务交付物：${task.title}`, path: rootFile, kind: 'markdown' }],
+        evidenceRefs: [versioned],
+        suggestedTaskStatus: 'review',
+      }
+      }
+    }
+    // 成果半区：同一 DB 文件、独立 apply（注入执行器）
+    const routes2 = new Map()
+    const mockCtx2 = {
+      webServer: { get: (p, h) => routes2.set(`GET ${p}`, h), post: (p, h) => routes2.set(`POST ${p}`, h) },
+      systemPrompt: { addSection: () => {} },
+      tools: { register: () => {} },
+    }
+    apply(mockCtx2, { dbPath: testDbFile, workerExecutor: injectExecutorFor() })
+    const startRunHandler2 = routes2.get('POST /api/workbench/runs/start')
 
     let resData = null
     let resCode = 200
@@ -790,12 +821,12 @@ test('工作台全链路控制与自主维护 E2E 专项验证', async (t) => {
       goal: '测试成果保存',
     })
 
-    await startRunHandler(
+    await startRunHandler2(
       { body: { taskId: tValid.id, clientRequestId: 'req-valid-history-test' } },
       { status: (c) => { resCode = c; return { json: (d) => { resData = d } } }, json: (d) => { resData = d } },
     )
 
-    // 等待隔离桥接替身返回后，由产品代码落盘；不代表真实模型/宿主证据。
+    // 等待注入执行器落盘后产品代码记录 Result；不代表真实模型/宿主证据。
     const wbRunsDir = path.join(validPath, '.workbench', 'runs')
     for (let i = 0; i < 150; i++) {
       if (fs.existsSync(wbRunsDir) && fs.readdirSync(wbRunsDir).length > 0) break
@@ -897,7 +928,14 @@ test('工作台全链路控制与自主维护 E2E 专项验证', async (t) => {
       tools: { register: () => {} },
     }
 
-    apply(mockCtx, { dbPath: ':memory:' })
+    // 桥接已移除：注入 completed 执行器驱动“成功回流”半区（15.2 诚实失败半区走产品默认路径）
+    const okExecutor = async (task) => ({
+      state: 'completed',
+      summary: `整理完成：${task.title}`,
+      artifactRefs: [{ title: `业务交付物：${task.title}`, path: 'C:\\evidence-stub\\deliverable.md', kind: 'markdown' }],
+      suggestedTaskStatus: 'review',
+    })
+    apply(mockCtx, { dbPath: ':memory:', workerExecutor: okExecutor })
 
     const callRoute = async (key, body) => {
       const handler = routes.get(key)
@@ -943,26 +981,48 @@ test('工作台全链路控制与自主维护 E2E 专项验证', async (t) => {
     // 15.2 失败阻塞：结论同样回流，且不伪造完成
     // 先建立根目录不存在的项目，再在其中建卡，触发严格工作区边界失败路径
     let created = null
-    await routes.get('POST /api/workbench/projects')(
+    // 15.2 诚实失败半区：产品默认执行器（内置边界检查），独立 apply 与路由
+    const routes2 = new Map()
+    const mockCtx2 = {
+      webServer: { get: (p, h) => routes2.set(`GET ${p}`, h), post: (p, h) => routes2.set(`POST ${p}`, h) },
+      systemPrompt: { addSection: () => {} },
+      tools: { register: () => {} },
+    }
+    apply(mockCtx2, { dbPath: ':memory:' })
+    await routes2.get('POST /api/workbench/projects')(
       { body: { id: 'proj-missing-root', title: '缺失根目录项目', rootPath: 'C:\\__dsh_absent_root__', goal: '边界测试' } },
       { status: () => ({ json: (d) => { created = d } }), json: (d) => { created = d } },
     )
-    const badCard = await callRoute('POST /api/workbench/tasks', {
+    const callRoute2 = async (key, body) => {
+      const handler = routes2.get(key)
+      assert.ok(handler, `${key} 路由必须已注册`)
+      let data = null
+      const res = {
+        status: () => res,
+        json: (d) => {
+          data = d
+          return res
+        },
+      }
+      await handler({ body: body ?? {}, query: {} }, res)
+      return data
+    }
+    const badCard = await callRoute2('POST /api/workbench/tasks', {
       projectId: 'proj-missing-root',
       title: '回流验证卡：工作区缺失',
       goal: '在不存在目录执行',
     })
     assert.equal(badCard.projectId, 'proj-missing-root', '任务必须建在缺失根目录项目中')
-    await callRoute('POST /api/workbench/runs/start', {
+    await callRoute2('POST /api/workbench/runs/start', {
       taskId: badCard.id,
       clientRequestId: `flow-bad-${Date.now()}`,
     })
     for (let i = 0; i < 100; i++) {
-      const t = (await listTasks()).find((x) => x.id === badCard.id)
+      const t = (await callRoute2('GET /api/workbench/tasks', {})).find((x) => x.id === badCard.id)
       if (t && t.statusCode === 'blocked') break
       await new Promise((r) => setTimeout(r, 100))
     }
-    const chatAfterBad = await listChat()
+    const chatAfterBad = await callRoute2('GET /api/workbench/chat/messages', {})
     const blockedMsg = chatAfterBad.filter((m) => m.sender === 'assistant' && m.text.includes('回流验证卡：工作区缺失'))
     assert.equal(blockedMsg.length, 1, '失败结论必须回流且只有一次')
     assert.ok(blockedMsg[0].text.startsWith('⚠️ 未完成'), '失败必须如实标注未完成，不得伪造成功')

@@ -107,9 +107,9 @@ test('宿主会话桥接（sessionController）替身层语义', async (t) => {
     })
     const bridge = DshHostSessionBridge.probe(controller)
     // 创建路径 pin
-    await bridge.ensureSession(undefined, { cwd: 'C:\\tmp\\w', model: { provider: 'workbuddy-bridge', model: 'deepseek-v4.1-flash' } })
+    await bridge.ensureSession(undefined, { cwd: 'C:\\tmp\\w', model: { provider: 'openai-codex', model: 'gpt-6-luna' } })
     assert.equal(pinned.length, 1)
-    assert.deepEqual(pinned[0], { agent: 'session-test-1', selection: { provider: 'workbuddy-bridge', model: 'deepseek-v4.1-flash' } })
+    assert.deepEqual(pinned[0], { agent: 'session-test-1', selection: { provider: 'openai-codex', model: 'gpt-6-luna' } })
     // 复用路径也 pin（会话可能创建于无 pin/默认路由不可用的环境）
     await bridge.ensureSession('session-existing', { cwd: 'C:\\tmp\\w', model: { provider: 'openai-codex', model: 'gpt-6-luna' } })
     assert.equal(pinned.length, 2)

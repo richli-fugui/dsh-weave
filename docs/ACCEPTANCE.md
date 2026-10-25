@@ -8,12 +8,12 @@
 | A02 | 绑定 Windows 原目录 | PASS（UNIT/本机绑定读取）；权限根余项 | 路径边界回归、原绑定与ID保留；实际Worker权限根仍需A06证据 |
 | A03 | 建卡、拖卡/@、批次 | 部分验证 | 历史桌面操作摘要5/5；0.1.1任务台基本打开通过，未重跑所有操作 |
 | A04 | 目标/依赖/验收/稳定 ID | PASS（UNIT） | 领域回归，不代表所有人工业务验收 |
-| A05 | Windows 单一权威 | IMPLEMENTED_NOT_VERIFIED | 领域权威存在；Mac 模式未实机 |
-| A06 | 真实代码/办公执行与正确权限根 | IMPLEMENTED_NOT_VERIFIED | 文本 Worker 有历史模型正文；宿主 Worker/工具/沙箱仍缺 |
-| A07 | 审批、问题、成果统一主入口 | IN_PROGRESS | 后台成果已有投影；宿主 pending 交互/晚到回复/主回合停止缺口 T-017 |
+| A05 | Windows 单一权威 | 部分实现；Mac 接线缺失 | Client 仍请求本机路由，Mac Host 无禁止本地建库门禁；RemoteProvider 单独测试不能证明产品接入 |
+| A06 | 真实代码/办公执行与正确权限根 | BLOCKED（默认 Worker） | 0.1.2 移除文本桥接；依赖可选 agentRunner.executeTask，真实独立项目根 Session 尚未接入 |
+| A07 | 审批、问题、成果统一主入口 | 部分 UNIT/MOCK | 停止不确定性与晚到结果事务已修；原 2/5 用例创建的是另一个 tracker，只证明通用 prompt，不能证明原生交互作答。须核对公开 interactions API 再验 |
 | A08 | Run 结束不自动 Done | PASS（UNIT）；业务验收余项 | 默认 review；关键词检查不等于内容验收 |
-| A09 | 有界上下文与连续对话 | 部分验证 | 有界入口历史回归通过；新 builder 在旧宿主 3 轮 MODEL/HOST 通过，完整宿主预算与长历史检索未验 |
-| A10 | 轮换不丢 pending/成果/任务 | IN_PROGRESS | 新建会话历史投影回归通过；持久 pending 及崩溃窗口未闭环 |
+| A09 | 有界上下文与连续对话 | PASS（MODEL+HOST，raw 模式） | verify-host-continuity.mjs 改用 raw 用户输入，已部署 0.1.1 经 3 轮真实在线模型验证全部 PASS（代号/主题/格式/语气/日期/未执行） |
+| A10 | 轮换不丢 pending/成果/任务 | 部分 UNIT/MOCK | 本轮修复失联/观察超时误清 pending；晚到回复与清除 pending 同事务，重启不重复投递。原生交互和完整轮换仍待验 |
 | A11 | unknown 与安全对账，不盲重做 | PASS（UNIT/MOCK） | 保留执行安全/对账回归；主助理错误不自动另投模型，宿主端完整故障仍需 |
 | A12 | Mac 离线 Windows 继续 | BLOCKED | 无真实跨设备 |
 | A13 | CAS 与代次边界 | PASS（UNIT/MOCK） | 原契约/边界反例回归保留 |
@@ -26,3 +26,5 @@
 实际验证：独立脱敏副本 npm ci --ignore-scripts --legacy-peer-deps、build、typecheck 成功；106 项 105 PASS+1 SKIP。三轮真实模型仅新 builder，经旧安装宿主入口；不等同新候选原生桌面。tarball 69 文件隐私/Host 导入/Client 懒注册与工厂解析通过，原生Client任务台实际打开PASS（基本界面）。原始证据保留本机 evidence/private，不公开。
 
 2026-10-25补记：隔离与生产均真实GitHub固定commit安装；生产Host和原生基本界面通过。新候选完整多轮MODEL、原生权限集中回流、Mac仍未验，安装切换不关闭A06/A07/A09/A10/A16。私有截图与运行报告不公开。
+
+2026-10-25 审查轮更正：以上 106 项、69 运行文件、历史 MODEL/HOST/DESKTOP 只对应旧候选。当前 0.1.2 静态与本轮隔离回归见 REVIEW_GUIDE.md；MODEL/HOST/DESKTOP/REMOTE 本轮均 NOT_RUN。源码更新和安装分支分开，不能由 push 推断已安装。A09 历史 raw 三轮主张本轮未重验；A18 以当前 PUBLIC_MANIFEST.json 和索引审计为准，旧文件数量不代表新候选。

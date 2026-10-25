@@ -1,45 +1,40 @@
 # 当前状态：dsh-table
 
-更新时间：2026-10-25 02:31（Asia/Shanghai）。最新轮次：[20261025-0005-github-install](rounds/20261025-0005-github-install.md)。
-阶段：**Windows 日常 desktop 已从 GitHub 固定提交安装并真实重开加载0.1.1，原生任务台基本界面通过**。这关闭本轮安装来源切换，不等于完整产品/U1-U6验收。
+更新时间：2026-10-25（Asia/Shanghai）。最新轮次：[20261025-194927-review-publish](rounds/20261025-194927-review-publish.md)。网页审查入口：[REVIEW_GUIDE](../docs/REVIEW_GUIDE.md)。
 
-## 当前安装与保留的数据
+阶段：**0.1.2 源码审查候选**。用户授权独立审核、改进、脱敏 commit/push 到 GitHub main，供网页审查；不发布 npm、不改安装分支、不重装/重启桌面。
 
-- 来源：github:richli-fugui/dsh-weave#c6f36711a4e1833f8b9fc11fe1175bf638dccd60；同仓库codex/packages分支，预编译包0.1.1。源码对应main3150a8db00aa022361fb712919dd05dfcb3cabd2；PACKAGE_PROVENANCE.json可定位69文件SHA-256。
-- 原来源为本机0.1.0 tarball。按用户要求等待Remote Connect013轮完成并释放共享租约后，CreateNew独占安装。官方随包CLI exit0，安装时--ignore-scripts，不添加构建许可、不改实际项目目录。
-- 备份：原清单、patch、pnpm锁/workspace、旧插件完整安装及回退tgz、SQLite一致性备份均已做，存仓库外私有backups。精确位置在本机 .runtime/github-install-20261025/backup-location.json。
-- 安装/重开后：1项目、23卡、29Run、26Result、110聊天消息、1主助理；项目/任务ID、assistant绑定与generation保留。消息由108增至110是一次短连通性测试；没有新建验证卡。patch、workspace、bundles、其他依赖来源均未变。
-- Remote Connect仍0.1.18，28运行文件与其固定commit源码映射逐Git blob匹配；重开后health=ok、官方typert通道仍bound。未改另一项目源码或其占用。
+## 当前事实
 
-## 分层验证
+- 原始工作区 Git 无提交，保留他人未提交改动；公开 Git 历史在 .public-export。本轮前 main 为 cab82da9082146a41e385dfb64b873eb909ff7e8；安装分支为 c6f36711a4e1833f8b9fc11fe1175bf638dccd60，两者不能混称。
+- 前几轮加固、T-017 跟踪骨架和用户指定的 WorkBuddy 文本桥接移除保留。0.1.2 源码与 package-lock 身份现一致；主助理仅宿主会话，默认 Worker 缺宿主执行器时阻塞。
+- 本轮修复：项目创建事务遗漏；宿主失联/查询异常/观察截止误报停止并遗失控制；停止 ACK 与终态混淆；停止聚合丢 conflict；旧回调在停止/卸载后继续写；晚到回复与 pending 清除崩溃窗口；损坏依赖误放行；删除源码后 lib 残留进入包。
+- npm test 现自动清理并重建生成目录；公开导出可安全删除上次清单中未编辑的过时文件，仍拒绝未知/编辑文件。
+- Windows desktop 本轮只读安装元数据：dsh-table 仍为上述 GitHub 固定 0.1.1；Remote Connect 依赖已为 v0.1.19，未改动。当前运行版本/活跃任务未重新实测，不从安装元数据推断已加载。
+- Mac 不是仅缺实机：Client 硬编码本机 /api/workbench，Host 无 Mac 禁止建库模式，RemoteProvider 尚未装入产品。当前不能让用户直接安装来访问 Windows 同一工作台。
 
-| 层 | 当前结论与边界 |
+## 验证边界
+
+| 层 | 本轮结果 |
 | --- | --- |
-| UNIT/STATIC | 本轮typecheck退出0；106项=105 PASS+1在线模型门禁SKIP；未改业务源码 |
-| INSTALL（隔离+日常） | 同一个GitHub固定commit实际拉取；69运行文件全部匹配；pnpm锁载体为GitHub codeload tarball，不是file/link本机路径 |
-| HOST（隔离） | 官方DSH临时HOME/profile真实启动，项目根完全隔离；projects/control/capabilities PASS，正常shutdown；无模型调用 |
-| HOST（日常） | 02:28经原生应用菜单正常完整退出后重开，新进程晚于安装；项目/卡/assistant/控制/桥接诊断HTTP通过，SQLite quick_check=ok、控制active/queued/awaiting/unknown均0 |
-| DESKTOP | 原生插件页显示GitHub来源和0.1.1；重开后真实任务台打开，23张卡、控制条、主输入与历史可见；不等于新候选所有交互或办公任务通过 |
-| MODEL | 本轮仅一次短消息，在重开前观察到旧路径仍运行；据此没有把安装metadata误认作新代码执行。当前新候选重开后未追加模型测试。上一轮3轮仅新builder经旧安装入口，不迁移为新候选MODEL通过 |
-| REMOTE/Mac | 本轮NOT_RUN，真实Mac仍BLOCKED；0.2.1-rc.3仍未实测 |
-
-私有证据：evidence/private/github-production-20261025.json、github-native-panel-20261025.jpg、github-live-source-probe-20261025.json；隔离证据 .runtime/github-install-20261025/report.json。均不上传。
+| STATIC | typecheck、干净构建 PASS；打包 dry-run 69 文件、Host/Client 入口齐全、残留桥接 0 |
+| UNIT/MOCK | 基线重建后 116 PASS；本轮最终 131 PASS，0 FAIL，0 SKIP；7 个先写负例修改前全 FAIL，修复后通过 |
+| 公开副本 | 脱敏源码、完整索引/清单及独立副本复现按最新轮次补记；原始 evidence/数据库/截图/记忆不上传 |
+| MODEL / HOST / DESKTOP / REMOTE / MANUAL | 本轮全部 NOT_RUN；历史证据只属于其当时版本，不自动覆盖 0.1.2 |
 
 ## 开放问题
 
-| 优先级 | ID | 事实与下一步证据 |
+| 优先级 | ID | 事实与下一步 |
 | --- | --- | --- |
-| 最高 | T-017 | 宿主pending问答/晚到回复/主回合停止仍未统一主入口。实现持久跟踪、投影与作答、停止联动；验收主回合结束后仍可控，不能要求用户操作后台会话 |
-| 高 | T-001/T-004 | 有界入口投影已部署；需新候选原始chat/send用户输入的多轮、重建/重启与长历史决定检索。原verify-host-continuity.mjs会自行注入上下文，只能作builder辅助证据；下一轮先改成raw输入模式，不能让驱动替产品完成交接 |
-| 高 | T-002 | Worker仍主要文本桥接，需独立项目根宿主Session、真实工具/权限与办公/代码交付证据；安装通过不关闭此项 |
-| 中 | T-007 | 远程契约与本机通道不等于真Mac U6，缺设备 |
-| 低 | T-016 | 历史验证卡/乱码、上一轮3组合成消息和本轮1组连通性消息均保留，未擅自清理 |
-| 低 | rc.3 | engines允许>=0.2.1-rc.2 <0.3.0，真实rc.3 HOST/DESKTOP/REMOTE未验，不作兼容保证 |
+| 高 | T-002 | 默认 Worker 仍只探测可选 agentRunner.executeTask；按真实公开类型接独立项目根 Session、工具与权限，验证真实代码及办公任务 |
+| 高 | T-017 | 原生问题/审批尚缺正式 interaction 响应契约与实证；旧 2/5 测试 tracker 与 apply 分离，现已更名纠正。不能以 followup prompt 当作已回答原生交互 |
+| 高 | T-007 | RemoteProvider 单独 mock 通过，产品 Mac 接线与禁止本地权威门禁缺失；先核对 Remote Connect v0.1.19 公开扩展能力，再接 UI/Host |
+| 中 | 主入口并发/受理 | tracker ID 与宿主实际 requestId 未统一；ACK 丢失、并发输入、前台回复持久化窗口仍需专项。停止观察修复不等于所有派发幂等已完成 |
+| 中 | 0.1.2 部署 | 用户当前要源码供审查，未更新安装分支。试装前按部署租约、备份、隔离包/宿主/Client验证，再串行升级，不直接装 main |
+| 低 | rc.3/T-016 | rc.3 未实测；历史验证卡/消息未清理。保留原数据，不擅自删除 |
 
-## 下一位第一条动作
+## 下一位第一条可执行动作
 
-先读本轮记录和docs/GITHUB_INSTALL.md，检查项目/共享租约；typecheck+test应105过1跳过。不需要重新安装或再次重启来“完成”本轮来源切换。只读发现当前官方desktop进程监听后核对GitHub依赖、69文件及控制0；上次端口54793，必须重查，禁止硬编码。
+先运行 npm run typecheck、npm test 确认当前 131/131 基线（测试会自行重建），再读取 docs/REVIEW_GUIDE.md，按外部反馈定位真实源码和触发条件。若继续施工，优先对照目标 DSH 公开 Session/interaction 类型，列出问题/审批请求 ID、回答方法、取消与生命周期实际契约；必须取得真实待决交互从同一主入口作答后解除的证据，不能沿用旧 2/5 测试结论。
 
-之后先将连续性验证器改为直接发送原始用户输入（显式模型开关，最多3个短回合），验证已部署0.1.1，然后推进T-017。不要重跑会向日常项目批量建卡/写成果的旧verify-host-iso全套脚本。
-
-回退：读取私有backup-location，随包CLI只把dsh-table改回备份的previous-install.tgz，再正常重开并核验；不恢复整份旧profile、不用旧数据库覆盖新消息。回退包已准备，本轮未实际回滚生产。当前无需用户安装/重开，应用已打开任务台。
+后续选择 T-002/T-007 时，取得真实项目根/权限或真实公开远程扩展调用证据；缺设备只阻塞实机层，不把未实现部分写成缺硬件。当前无需用户做安装操作。

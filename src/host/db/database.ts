@@ -49,6 +49,8 @@ export function openWorkbenchDb(config: DbConfig = {}): DatabaseSync {
   try {
     db.exec('PRAGMA journal_mode = WAL')
     db.exec('PRAGMA foreign_keys = ON')
+    // 多进程场景（宿主 + 部署/验证脚本）并发写时等待锁而非立刻抛 SQLITE_BUSY
+    db.exec('PRAGMA busy_timeout = 5000')
     migrate(db)
   } catch (err) {
     try {

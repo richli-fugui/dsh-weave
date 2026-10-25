@@ -1,6 +1,7 @@
 import type { WorkbenchDomain } from '../host/services/domain.js'
 import type { TaskScheduler } from '../host/services/scheduler.js'
 import type { WorkbenchContextManager } from '../host/services/context.js'
+import type { HostSessionTracker } from '../host/services/host-tracker.js'
 import { ValidationError } from '../shared/errors.js'
 import type {
   AssistantState,
@@ -27,6 +28,7 @@ export class LocalProvider implements WorkbenchProvider {
     private readonly domain: WorkbenchDomain,
     private readonly scheduler?: TaskScheduler,
     private readonly contextManager?: WorkbenchContextManager,
+    private readonly hostTracker?: HostSessionTracker,
   ) {}
 
   async createWorkIntent(rawInput: string, projectId?: string): Promise<WorkIntent> {
@@ -34,13 +36,19 @@ export class LocalProvider implements WorkbenchProvider {
   }
 
   async getControlSnapshot(): Promise<ControlSnapshot> {
-    if (this.scheduler) {
-      return this.scheduler.getControlSnapshot()
+    let snapshot: ControlSnapshot = this.scheduler
+      ? this.scheduler.getControlSnapshot()
+      : { activeCount: 0, queuedCount: 0, awaitingCount: 0, unknownCount: 0, items: [] }
+    if (this.hostTracker) {
+      snapshot = this.hostTracker.augmentControlSnapshot(snapshot)
     }
-    return { activeCount: 0, queuedCount: 0, awaitingCount: 0, items: [] }
+    return snapshot
   }
 
   async stopRun(runId: string): Promise<StopResult> {
+    if (this.hostTracker && this.hostTracker.isHostSession(runId)) {
+      return this.hostTracker.stopHostSession(runId)
+    }
     if (this.scheduler) {
       return this.scheduler.stopRun(runId)
     }
@@ -48,17 +56,51 @@ export class LocalProvider implements WorkbenchProvider {
   }
 
   async stopIntent(intentId: string): Promise<StopResult> {
-    if (this.scheduler) {
-      return this.scheduler.stopIntent(intentId)
+    const [hostStop, schedStop] = await Promise.all([
+      this.hostTracker?.stopIntent(intentId) ?? null, this.scheduler?.stopIntent(intentId) ?? null,
+    ])
+
+    const commandId = schedStop?.commandId || hostStop?.commandId || 'noop'
+    const status =
+      schedStop?.status === 'conflict' || hostStop?.status === 'conflict' ? 'conflict' :
+      schedStop?.status === 'waiting_tool_exit' || hostStop?.status === 'waiting_tool_exit'
+        ? 'waiting_tool_exit'
+        : schedStop?.status === 'stopped' || hostStop?.status === 'stopped'
+          ? 'stopped'
+          : 'already_terminal'
+    const stoppedRunIds = [...(schedStop?.stoppedRunIds || []), ...(hostStop?.stoppedRunIds || [])]
+    const pendingToolIds = [...(schedStop?.pendingToolIds || []), ...(hostStop?.pendingToolIds || [])]
+
+    return {
+      commandId,
+      status,
+      stoppedRunIds,
+      pendingToolIds: pendingToolIds.length > 0 ? pendingToolIds : undefined,
     }
-    return { commandId: 'noop', status: 'already_terminal', stoppedRunIds: [] }
   }
 
   async stopAll(): Promise<StopResult> {
-    if (this.scheduler) {
-      return this.scheduler.stopAll()
+    const [hostStop, schedStop] = await Promise.all([
+      this.hostTracker?.stopAll() ?? null, this.scheduler?.stopAll() ?? null,
+    ])
+
+    const commandId = schedStop?.commandId || hostStop?.commandId || 'noop'
+    const status =
+      schedStop?.status === 'conflict' || hostStop?.status === 'conflict' ? 'conflict' :
+      schedStop?.status === 'waiting_tool_exit' || hostStop?.status === 'waiting_tool_exit'
+        ? 'waiting_tool_exit'
+        : schedStop?.status === 'stopped' || hostStop?.status === 'stopped'
+          ? 'stopped'
+          : 'already_terminal'
+    const stoppedRunIds = [...(schedStop?.stoppedRunIds || []), ...(hostStop?.stoppedRunIds || [])]
+    const pendingToolIds = [...(schedStop?.pendingToolIds || []), ...(hostStop?.pendingToolIds || [])]
+
+    return {
+      commandId,
+      status,
+      stoppedRunIds,
+      pendingToolIds: pendingToolIds.length > 0 ? pendingToolIds : undefined,
     }
-    return { commandId: 'noop', status: 'already_terminal', stoppedRunIds: [] }
   }
 
   async saveChatMessage(sender: 'user' | 'assistant' | 'system', text: string, intentId?: string): Promise<ChatMessage> {
@@ -188,10 +230,15 @@ export class LocalProvider implements WorkbenchProvider {
     reconciled: Array<{ runId: string; resolvedState: string }>
     stillUncertain: string[]
   }> {
-    if (this.scheduler) {
-      return this.scheduler.reconcileUncertainRuns()
-    }
-    return { reconciled: [], stillUncertain: this.domain.listUncertainRuns().map((r) => r.id) }
+    const before = this.hostTracker?.getPendingTurn()
+    if (before) await this.hostTracker!.reconcileOnStartup()
+    const result = this.scheduler
+      ? await this.scheduler.reconcileUncertainRuns()
+      : { reconciled: [] as Array<{ runId: string; resolvedState: string }>, stillUncertain: this.domain.listUncertainRuns().map(r => r.id) }
+    const after = this.hostTracker?.getPendingTurn()
+    if (before && !after) result.reconciled.push({ runId: before.sessionId, resolvedState: before.stopRequested ? 'interrupted' : 'completed' })
+    if (after?.status === 'unknown') result.stillUncertain.push(after.sessionId)
+    return result
   }
 
   followEvents(afterSequence: number, callback: (event: OutboxEvent) => void): () => void {
@@ -212,10 +259,12 @@ export class LocalProvider implements WorkbenchProvider {
       }
       if (active) {
         timer = setTimeout(poll, 250)
+        if (typeof (timer as any)?.unref === 'function') (timer as any).unref()
       }
     }
 
     let timer = setTimeout(poll, 100)
+    if (typeof (timer as any)?.unref === 'function') (timer as any).unref()
     return () => {
       active = false
       clearTimeout(timer)

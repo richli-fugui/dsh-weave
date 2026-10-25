@@ -111,4 +111,19 @@ test('界面文案只呈现业务语义：状态码与优先级码不得直接�
     assert.equal(exported.taskPriorityLabel(code), label, `优先级 ${code} 必须显示为中文业务标签`)
   }
   assert.equal(exported.taskPriorityLabel('no-such-priority'), '普通', '未知优先级必须有安全的业务默认值')
+
+  const runStateCases = {
+    running: '推进中',
+    queued: '排队中',
+    stopping: '正在停止',
+    awaiting_input: '等待输入',
+    completed: '已完成',
+    interrupted: '已中断',
+    failed: '失败',
+    unknown: '结果待核对',
+  }
+  for (const [code, label] of Object.entries(runStateCases)) {
+    assert.equal(exported.runStateLabel(code), label, `运行状态 ${code} 必须显示为中文业务标签`)
+  }
+  assert.equal(exported.runStateLabel('some-unseen-state'), '处理中', '未知运行状态必须有安全的业务默认值')
 })

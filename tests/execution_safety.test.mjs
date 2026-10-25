@@ -257,10 +257,17 @@ test('packaged control feedback never claims a still-running or unknown worker h
   let client
   runInNewContext(readFileSync(resolve('lib/client.js'), 'utf8'), {
     window: { __ModuleLoader__: { load: definition => {
-      client = definition.factory(name => name === 'react/jsx-runtime' ? {} : {})
+      // 桩需提供 Component 基类：产物中的 PanelErrorBoundary（合法 React 用法）继承它
+      const ReactStub = {
+        Component: class { constructor(props) { this.props = props } },
+        createElement: () => null,
+        isValidElement: () => false,
+      }
+      client = definition.factory(name => name === 'react/jsx-runtime' ? {} : (name === 'react' ? ReactStub : {}))
     } } },
   })
   assert.equal(typeof client.formatStopFeedback, 'function')
+  assert.equal(typeof client.PanelErrorBoundary, 'function')
   const feedback = status => client.formatStopFeedback({ commandId: 'test', status, stoppedRunIds: ['run'], pendingToolIds: ['run'] })
   assert.match(feedback('waiting_tool_exit'), /尚未确认停止/)
   assert.match(feedback('conflict'), /待核对/)

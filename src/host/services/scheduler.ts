@@ -13,7 +13,12 @@ export interface WorkerExecutionResult {
   outcome?: Record<string, unknown>
 }
 
-export type WorkerExecutor = (task: Task, projectRoot: string, signal: AbortSignal) => Promise<WorkerExecutionResult>
+export type WorkerExecutor = (
+  task: Task,
+  projectRoot: string,
+  signal: AbortSignal,
+  context?: { runId: string },
+) => Promise<WorkerExecutionResult>
 
 export interface WorkerReconciliationResult {
   state: 'running' | 'completed' | 'exited' | 'not_found'
@@ -155,8 +160,21 @@ export class TaskScheduler {
 
     this.activeRuns.set(run.id, handle)
 
-    // 异步执行 worker
-    this.executeRunAsync(run, task, abortController, handle)
+    // 异步执行 worker；内部已完整 try/catch/finally，此处仅兜底其善后路径自身抛出的
+    // 残余异常，杜绝 Unhandled Rejection（尽力收敛 Run 状态并释放槽位）
+    this.executeRunAsync(run, task, abortController, handle).catch((err) => {
+      try {
+        this.domain.updateRunState(run.id, 'failed', {
+          reason: 'post-execution bookkeeping error',
+          detail: String((err as Error)?.message ?? err),
+        })
+      } catch {
+        // 终态 Run 的二次状态写入抛错可接受：槽位释放与队列排空才是必须保证的
+      }
+      this.activeRuns.delete(run.id)
+      handle.resolveStop()
+      this.drainQueue()
+    })
     return run
   }
 
@@ -578,10 +596,16 @@ export class TaskScheduler {
     handle: ActiveRunHandle,
   ) {
     const project = this.domain.getProject(task.projectId)
+    let res: WorkerExecutionResult | undefined
     try {
-      const res = await this.executor(task, project.rootPath, abortController.signal)
+      res = await this.executor(task, project.rootPath, abortController.signal, { runId: run.id })
       if (abortController.signal.aborted) {
-        this.domain.updateRunState(run.id, 'interrupted', { reason: 'User requested stop' })
+        this.domain.updateRunState(run.id, 'interrupted', {
+          reason: 'User requested stop',
+          summary: res?.summary,
+          artifactRefs: res?.artifactRefs,
+          outcome: res?.outcome,
+        })
         const currentTask = this.domain.getTask(task.id)
         if (currentTask.statusCode === 'in_progress') {
           this.domain.updateTask({
@@ -605,7 +629,12 @@ export class TaskScheduler {
       })
     } catch (err: any) {
       if (abortController.signal.aborted) {
-        this.domain.updateRunState(run.id, 'interrupted', { reason: 'User requested stop' })
+        this.domain.updateRunState(run.id, 'interrupted', {
+          reason: 'User requested stop',
+          summary: res?.summary,
+          artifactRefs: res?.artifactRefs,
+          outcome: res?.outcome,
+        })
         const currentTask = this.domain.getTask(task.id)
         if (currentTask.statusCode === 'in_progress') {
           this.domain.updateTask({

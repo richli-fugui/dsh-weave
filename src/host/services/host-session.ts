@@ -65,7 +65,7 @@ export function probeHostServices(ctx: unknown): { services: HostServiceProbeEnt
   return { services }
 }
 
-export type HostTurnStatus = 'replied' | 'accepted_no_reply_yet' | 'timeout' | 'error' | 'unavailable'
+export type HostTurnStatus = 'replied' | 'accepted_no_reply_yet' | 'awaiting_input' | 'timeout' | 'error' | 'unavailable' | 'stopped'
 
 export interface HostChatTurnResult {
   path: 'host-session' | 'unavailable'
@@ -181,7 +181,8 @@ export class DshHostSessionBridge {
    * diagnose 同路径）；page() 因 throughSeq=-1 在宿主 paginate 中会得到空页
    * （end=min(throughSeq+1,…)=0），仅作为 snapshotEvents 缺席时的尽力回退。
    */
-  private async eventsOf(sessionId: string): Promise<Array<unknown>> {
+  /** 供诊断与跟踪服务读取会话事件 */
+  async eventsOf(sessionId: string): Promise<Array<unknown>> {
     const resolved = await this.resolveAgent(sessionId)
     if (!resolved.ok) return []
     const session = (resolved.agent as { session?: { snapshotEvents?: () => Array<unknown> } })?.session
@@ -200,6 +201,11 @@ export class DshHostSessionBridge {
     if (r && r.type === 'event' && r.event && typeof r.event === 'object') return r.event
     const e = record as SessionEventView
     return e && typeof e.type === 'string' ? e : undefined
+  }
+
+  /** 从事件记录中提取 assistant 消息 */
+  static extractAssistantMessages(records: unknown): Array<{ seq: number; text: string }> {
+    return extractAssistantMessages(records)
   }
 
   /** 从 assistant/attempt 的 stream finish 分块提取模型层错误（诚实诊断用） */
@@ -347,6 +353,28 @@ export class DshHostSessionBridge {
         // resolve 失败按 unknown 继续，由超时兜底
       }
       if (agentStatus === 'running') sawRunning = true
+      if (agentStatus === 'awaiting_input') {
+        try {
+          const events = await this.eventsOf(sessionId)
+          const messages = extractAssistantMessages(events).filter((m) => m.seq > baselineMaxSeq)
+          const last = messages.length > 0 ? messages[messages.length - 1] : undefined
+          return {
+            path: 'host-session',
+            sessionId,
+            requestAccepted: true,
+            status: 'awaiting_input',
+            replyText: last?.text || '宿主助理等待你的输入或确认。',
+          }
+        } catch {
+          return {
+            path: 'host-session',
+            sessionId,
+            requestAccepted: true,
+            status: 'awaiting_input',
+            replyText: '宿主助理等待你的输入或确认。',
+          }
+        }
+      }
       if (agentStatus === 'idle') {
         idleRounds++
         // 从未见 running：给 turn 启动留 2 轮宽限；见过 running：首轮 idle 即认为完成

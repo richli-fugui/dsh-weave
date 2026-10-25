@@ -22,6 +22,28 @@ import type {
   UpdateTaskInput,
   WorkIntent,
 } from '../../shared/types.js'
+
+/** 数据库 JSON 字段安全解析：损坏行降级为默认值而非抛错（读取路径永不因脏数据 500） */
+function safeParseJsonArray(raw: unknown): unknown[] {
+  if (typeof raw !== 'string' || raw.trim() === '') return []
+  try {
+    const v = JSON.parse(raw)
+    return Array.isArray(v) ? v : []
+  } catch {
+    return []
+  }
+}
+
+/** 对象版本：损坏或非对象时返回空对象 */
+function safeParseJsonObject(raw: unknown): Record<string, unknown> {
+  if (typeof raw !== 'string' || raw.trim() === '') return {}
+  try {
+    const v = JSON.parse(raw)
+    return v && typeof v === 'object' && !Array.isArray(v) ? v : {}
+  } catch {
+    return {}
+  }
+}
 import { runTransaction } from '../db/database.js'
 
 export class WorkbenchDomain {
@@ -30,16 +52,18 @@ export class WorkbenchDomain {
   // ================= Projects =================
 
   createProject(input: CreateProjectInput): Project {
-    const id = input.id ?? randomUUID()
-    const now = new Date().toISOString()
-    const stmt = this.db.prepare(`
-      INSERT INTO projects (id, title, root_path, goal, status, revision, created_at, updated_at)
-      VALUES (?, ?, ?, ?, 'active', 1, ?, ?)
-    `)
-    stmt.run(id, input.title.trim(), input.rootPath.trim(), (input.goal ?? '').trim(), now, now)
+    return runTransaction(this.db, () => {
+      const id = input.id ?? randomUUID()
+      const now = new Date().toISOString()
+      const stmt = this.db.prepare(`
+        INSERT INTO projects (id, title, root_path, goal, status, revision, created_at, updated_at)
+        VALUES (?, ?, ?, ?, 'active', 1, ?, ?)
+      `)
+      stmt.run(id, input.title.trim(), input.rootPath.trim(), (input.goal ?? '').trim(), now, now)
 
-    this.appendOutboxEvent(id, 'project.created', { id, title: input.title })
-    return this.getProject(id)
+      this.appendOutboxEvent(id, 'project.created', { id, title: input.title })
+      return this.getProject(id)
+    })
   }
 
   getProject(id: string): Project {
@@ -85,13 +109,17 @@ export class WorkbenchDomain {
       const status = input.status !== undefined ? input.status : current.status
       const nextRev = current.revision + 1
 
-      this.db
+      const updateRes = this.db
         .prepare(`
           UPDATE projects
           SET title = ?, root_path = ?, goal = ?, status = ?, revision = ?, updated_at = ?
-          WHERE id = ?
+          WHERE id = ? AND revision = ?
         `)
-        .run(title, rootPath, goal, status, nextRev, now, input.id)
+        .run(title, rootPath, goal, status, nextRev, now, input.id, current.revision)
+      if (updateRes.changes !== 1) {
+        const fresh = this.getProject(input.id)
+        throw new ConflictError('Project', input.id, current.revision, fresh.revision)
+      }
 
       this.appendOutboxEvent(input.id, 'project.updated', { id: input.id, revision: nextRev })
       return this.getProject(input.id)
@@ -108,29 +136,32 @@ export class WorkbenchDomain {
     const dependencies = input.dependencies ?? []
     this.validateDependencies(id, dependencies)
 
-    const now = new Date().toISOString()
-    const stmt = this.db.prepare(`
-      INSERT INTO tasks (
-        id, project_id, title, goal, acceptance, status_code, priority_code,
-        dependencies_json, progress_percent, revision, created_at, updated_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0, 1, ?, ?)
-    `)
+    // 实体与 Outbox 事件同事务落库：事件写入失败时实体一并回滚，避免“有卡无事件”的投影失步
+    return runTransaction(this.db, () => {
+      const now = new Date().toISOString()
+      const stmt = this.db.prepare(`
+        INSERT INTO tasks (
+          id, project_id, title, goal, acceptance, status_code, priority_code,
+          dependencies_json, progress_percent, revision, created_at, updated_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0, 1, ?, ?)
+      `)
 
-    stmt.run(
-      id,
-      input.projectId,
-      input.title.trim(),
-      (input.goal ?? '').trim(),
-      (input.acceptance ?? '').trim(),
-      input.statusCode ?? 'todo',
-      input.priorityCode ?? 'normal',
-      JSON.stringify(dependencies),
-      now,
-      now,
-    )
+      stmt.run(
+        id,
+        input.projectId,
+        input.title.trim(),
+        (input.goal ?? '').trim(),
+        (input.acceptance ?? '').trim(),
+        input.statusCode ?? 'todo',
+        input.priorityCode ?? 'normal',
+        JSON.stringify(dependencies),
+        now,
+        now,
+      )
 
-    this.appendOutboxEvent(id, 'task.created', { id, projectId: input.projectId, title: input.title })
-    return this.getTask(id)
+      this.appendOutboxEvent(id, 'task.created', { id, projectId: input.projectId, title: input.title })
+      return this.getTask(id)
+    })
   }
 
   getTask(id: string): Task {
@@ -144,7 +175,7 @@ export class WorkbenchDomain {
       acceptance: row.acceptance,
       statusCode: row.status_code,
       priorityCode: row.priority_code,
-      dependencies: JSON.parse(row.dependencies_json || '[]'),
+      dependencies: safeParseJsonArray(row.dependencies_json) as string[],
       progressPercent: row.progress_percent,
       revision: row.revision,
       createdAt: row.created_at,
@@ -166,7 +197,7 @@ export class WorkbenchDomain {
       acceptance: row.acceptance,
       statusCode: row.status_code,
       priorityCode: row.priority_code,
-      dependencies: JSON.parse(row.dependencies_json || '[]'),
+      dependencies: safeParseJsonArray(row.dependencies_json) as string[],
       progressPercent: row.progress_percent,
       revision: row.revision,
       createdAt: row.created_at,
@@ -181,7 +212,7 @@ export class WorkbenchDomain {
         throw new ConflictError('Task', input.id, input.expectedRevision, current.revision)
       }
 
-      const dependencies = input.dependencies !== undefined ? input.dependencies : current.dependencies
+      const dependencies = input.dependencies !== undefined ? input.dependencies : this.readDependenciesForExecution(input.id)
       if (input.dependencies !== undefined) {
         this.validateDependencies(input.id, dependencies)
       }
@@ -209,12 +240,12 @@ export class WorkbenchDomain {
         input.progressPercent !== undefined ? input.progressPercent : current.progressPercent
       const nextRev = current.revision + 1
 
-      this.db
+      const updateRes = this.db
         .prepare(`
           UPDATE tasks
           SET title = ?, goal = ?, acceptance = ?, status_code = ?, priority_code = ?,
               dependencies_json = ?, progress_percent = ?, revision = ?, updated_at = ?
-          WHERE id = ?
+          WHERE id = ? AND revision = ?
         `)
         .run(
           title,
@@ -227,7 +258,14 @@ export class WorkbenchDomain {
           nextRev,
           now,
           input.id,
+          current.revision,
         )
+      // SQL 层乐观锁兜底：即使校验与写入之间出现跨进程写入（WAL 多进程可见），
+      // 也以 changes=0 拒绝而非静默覆盖（TS 层同值校验拦不住跨进程竞态）
+      if (updateRes.changes !== 1) {
+        const fresh = this.getTask(input.id)
+        throw new ConflictError('Task', input.id, current.revision, fresh.revision)
+      }
 
       this.appendOutboxEvent(input.id, 'task.updated', { id: input.id, revision: nextRev, statusCode })
       return this.getTask(input.id)
@@ -278,7 +316,7 @@ export class WorkbenchDomain {
       if (uncertainQueue) throw new WorkbenchError('Task has an unresolved queue claim', 'UNKNOWN_OUTCOME')
       const task = this.getTask(input.taskId)
       if (task.statusCode !== 'todo') throw new ValidationError('Only a ready todo task can start a new execution')
-      for (const depId of task.dependencies) {
+      for (const depId of this.readDependenciesForExecution(task.id)) {
         const dep = this.getTask(depId)
         if (dep.statusCode !== 'done') throw new ValidationError(
           "Prerequisite task '" + dep.title + "' (" + depId + ") is not done (current: " + dep.statusCode + ")",
@@ -311,6 +349,10 @@ export class WorkbenchDomain {
     return this.mapRunRow(row)
   }
 
+  attachWorkerSession(runId: string, workerSessionId: string): void {
+    this.db.prepare('UPDATE runs SET worker_session_id = ? WHERE id = ?').run(workerSessionId, runId)
+  }
+
   listRuns(taskId?: string): Run[] {
     const sql = taskId
       ? 'SELECT * FROM runs WHERE task_id = ? ORDER BY started_at DESC'
@@ -329,7 +371,7 @@ export class WorkbenchDomain {
       const now = new Date().toISOString()
       const rows = this.db.prepare("SELECT * FROM runs WHERE state IN ('running','stopping','awaiting_input')").all() as any[]
       for (const row of rows) {
-        const outcome = { ...JSON.parse(row.outcome_json || '{}'), recoveryRequired: true,
+        const outcome = { ...safeParseJsonObject(row.outcome_json), recoveryRequired: true,
           previousState: row.state, reason: 'Execution outcome must be reconciled with its worker after restart' }
         this.db.prepare("UPDATE runs SET state = 'unknown', finished_at = NULL, outcome_json = ? WHERE id = ?")
           .run(JSON.stringify(outcome), row.id)
@@ -625,6 +667,21 @@ export class WorkbenchDomain {
 
   // ================= Assistant State =================
 
+  /** Pending control and any late delivery commit together; a crash cannot deliver twice. */
+  savePendingHostTurn(turn: Record<string, unknown> | null, delivery?: {
+    entityId: string; type: string; payload: Record<string, unknown>; text?: string; intentId?: string
+  }): void {
+    runTransaction(this.db, () => {
+      const state = this.getAssistantState()
+      if (delivery) {
+        if (delivery.text) this.saveChatMessage('assistant', delivery.text, delivery.intentId)
+        this.appendOutboxEvent(delivery.entityId, delivery.type, delivery.payload)
+      }
+      this.db.prepare('UPDATE assistant_state SET memory_index_json = ?, updated_at = ? WHERE stable_id = ?')
+        .run(JSON.stringify({ ...state.memoryIndex, pendingHostTurn: turn }), new Date().toISOString(), state.stableId)
+    })
+  }
+
   getAssistantState(stableId: string = 'main-assistant') {
     let row = this.db.prepare('SELECT * FROM assistant_state WHERE stable_id = ?').get(stableId) as any
     if (!row) {
@@ -746,18 +803,27 @@ export class WorkbenchDomain {
   saveChatMessage(sender: 'user' | 'assistant' | 'system', text: string, intentId?: string): ChatMessage {
     const id = randomUUID()
     const now = new Date().toISOString()
+    let validIntentId: string | null = null
+    if (intentId) {
+      try {
+        const intentRow = this.db.prepare('SELECT id FROM work_intents WHERE id = ?').get(intentId)
+        if (intentRow) validIntentId = intentId
+      } catch {
+        validIntentId = null
+      }
+    }
     this.db
       .prepare(`
         INSERT INTO chat_messages (id, sender, text, intent_id, created_at)
         VALUES (?, ?, ?, ?, ?)
       `)
-      .run(id, sender, text, intentId ?? null, now)
+      .run(id, sender, text, validIntentId, now)
 
     return {
       id,
       sender,
       text,
-      intentId,
+      intentId: validIntentId || undefined,
       createdAt: now,
     }
   }
@@ -797,8 +863,19 @@ export class WorkbenchDomain {
       controlEpoch: row.control_epoch || 1,
       startedAt: row.started_at,
       finishedAt: row.finished_at || undefined,
-      outcome: JSON.parse(row.outcome_json || '{}'),
+      outcome: safeParseJsonObject(row.outcome_json),
     }
+  }
+
+  /** UI reads can degrade gracefully; execution must not turn corrupt prerequisites into none. */
+  private readDependenciesForExecution(taskId: string): string[] {
+    const row = this.db.prepare('SELECT dependencies_json FROM tasks WHERE id = ?').get(taskId) as { dependencies_json: string } | undefined
+    if (!row) throw new NotFoundError('Task', taskId)
+    try {
+      const parsed = JSON.parse(row.dependencies_json)
+      if (Array.isArray(parsed) && parsed.every(id => typeof id === 'string' && id.trim().length > 0)) return parsed
+    } catch { /* reject admission below */ }
+    throw new WorkbenchError('任务依赖数据损坏，请明确修复依赖后再执行；未自动清空依赖。', 'CORRUPT_DEPENDENCIES')
   }
 
   private validateDependencies(taskId: string, dependencies: string[]) {
@@ -829,7 +906,7 @@ export class WorkbenchDomain {
         deps = dependencies
       } else {
         const row = this.db.prepare('SELECT dependencies_json FROM tasks WHERE id = ?').get(curr) as any
-        deps = row ? JSON.parse(row.dependencies_json || '[]') : []
+        deps = row ? this.readDependenciesForExecution(curr) : []
       }
 
       for (const next of deps) {

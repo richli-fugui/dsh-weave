@@ -81,34 +81,24 @@ await record('workbench: GET /api/workbench/tasks（种子任务）', async () =
   return { count: data.length, statuses: data.map((t) => t.statusCode) }
 })
 
-let bridgeUp = false
-await record('bridge: WorkBuddy 桥接可达性探测', async () => {
-  try {
-    const res = await fetch('http://127.0.0.1:8787/v1/models', { signal: AbortSignal.timeout(3000) })
-    // 401 也算可达（预期鉴权行为，见 docs/BRIDGE_AUTH.md）
-    bridgeUp = res.status < 500
-  } catch {
-    bridgeUp = false
-  }
-  return { bridgeUp }
-})
-
+// WorkBuddy 文本桥接已按用户决定移除（0.1.2）：文本生成只有宿主会话一条通路。
+let hostBridgeAvailable = false
 await record('workbench: GET /api/workbench/capabilities（诚实能力披露）', async () => {
   const res = await fetch(`${base}/api/workbench/capabilities`, { headers: H.cookie() })
   const data = assertOk('capabilities', { statusCode: res.status, body: await res.json().catch(() => null) })
-  // 能力披露必须与桥接真实可达性一致，不得伪造
-  if (data.capabilities?.textGeneration !== bridgeUp) {
-    throw new Error(`能力披露与桥接事实不符: disclosed=${data.capabilities?.textGeneration} bridgeUp=${bridgeUp}`)
-  }
-  let hostBridgeAvailable = false
   try {
     const diagRes = await fetch(base + '/api/workbench/diagnostics/host-session', { headers: H.cookie() })
     if (diagRes.status === 200) hostBridgeAvailable = (await diagRes.json()).available === true
   } catch {}
   if (data.executionBackend === 'host-session-controller') {
     if (!hostBridgeAvailable) throw new Error('披露 host-session-controller 但宿主桥接探测不可用（虚报）')
-  } else if (data.executionBackend !== (bridgeUp ? 'workbuddy-bridge' : 'standalone-local')) {
-    throw new Error(`执行后端披露与事实不符: ${data.executionBackend}`)
+    if (data.capabilities?.textGeneration !== true) throw new Error('宿主桥接可用时 textGeneration 必须为 true')
+  } else if (data.executionBackend === 'standalone-local') {
+    if (hostBridgeAvailable) throw new Error('宿主桥接可用却披露 standalone-local（失实）')
+    if (data.capabilities?.textGeneration !== false) throw new Error('无宿主桥接时 textGeneration 必须如实为 false')
+    if ('workbuddy-bridge' in data) throw new Error('已移除的 workbuddy-bridge 后端不得再出现')
+  } else {
+    throw new Error(`执行后端披露异常: ${data.executionBackend}`)
   }
   return data
 })
@@ -157,8 +147,8 @@ await record('workbench: POST /api/workbench/runs/start + 诚实失败路径', a
   const run = assertOk('start-run', { statusCode: res.status, body: await res.json().catch(() => null) })
   if (!run.id) throw new Error('Run 未受理')
   // 快照 items 只含活跃/未决/排队 run，终态 run 会移出；以任务卡流转为收敛信号。
-  // 桥接可用时 Worker 真实执行并交付（任务 review 或按验收判定 blocked）；
-  // 桥接不可用时必须诚实 failed（任务 blocked）。两种路径都不得伪造完成。
+  // Worker 交付依赖宿主 Agent 执行器（T-002 宿主会话化前，iso 环境无 agentRunner
+  // 且文本桥接已移除）→ 必须诚实 failed（任务 blocked），绝不得伪造完成。
   let taskStatus = ''
   for (let i = 0; i < 40; i++) {
     await new Promise((r) => setTimeout(r, 500))
@@ -168,14 +158,10 @@ await record('workbench: POST /api/workbench/runs/start + 诚实失败路径', a
     taskStatus = task?.statusCode ?? ''
     if (['blocked', 'failed', 'review', 'done'].includes(taskStatus)) break
   }
-  if (bridgeUp) {
-    if (!['review', 'blocked', 'done'].includes(taskStatus)) {
-      throw new Error(`桥接可用时任务应完成交付并流转（review/blocked/done），实测: ${taskStatus || '未流转'}`)
-    }
-  } else if (taskStatus !== 'blocked') {
-    throw new Error(`桥接不可用时任务必须诚实 blocked，实测: ${taskStatus || '未流转'}`)
+  if (!['blocked', 'review', 'done'].includes(taskStatus)) {
+    throw new Error(`任务必须收敛为诚实终态（blocked/review/done），实测: ${taskStatus || '未流转'}`)
   }
-  return { runId: run.id, taskStatus, bridgeUp }
+  return { runId: run.id, taskStatus, hostBridgeAvailable }
 })
 
 if (!localMode) {

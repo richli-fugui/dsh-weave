@@ -50,6 +50,11 @@ export function exportPublic(root, output) {
   const destination = path.resolve(output)
   if (destination === source || !destination.startsWith(source + path.sep)) throw new Error('Export must be a dedicated child checkout')
   const expected = new Set([...files, 'PUBLIC_MANIFEST.json'])
+  const priorManifestPath = path.join(destination, 'PUBLIC_MANIFEST.json')
+  const priorFiles = fs.existsSync(priorManifestPath)
+    ? new Map(JSON.parse(fs.readFileSync(priorManifestPath, 'utf8')).files.map(file => [file.path, file.sha256]))
+    : new Map()
+  const obsolete = []
   const checkExisting = (relative = '') => {
     const directory = path.join(destination, relative)
     if (!fs.existsSync(directory)) return
@@ -59,10 +64,16 @@ export function exportPublic(root, output) {
       const name = path.posix.join(relative, entry.name)
       if (entry.isSymbolicLink()) throw new Error('Export cannot contain symlinks')
       if (entry.isDirectory()) checkExisting(name)
-      else if (!expected.has(name)) throw new Error('Unexpected file in public checkout: ' + name)
+      else if (!expected.has(name)) {
+        const hash = createHash('sha256').update(fs.readFileSync(path.join(destination, name))).digest('hex')
+        // Only prune an unchanged file from our previous reviewed export. Preserve unknown/user edits.
+        if (priorFiles.get(name) !== hash) throw new Error('Unexpected or modified obsolete file in public checkout: ' + name)
+        obsolete.push(name)
+      }
     }
   }
   checkExisting()
+  for (const name of obsolete) fs.unlinkSync(path.join(destination, name))
   const manifest = prepared.map(({ name, content }) => ({ path: name, sha256: createHash('sha256').update(content).digest('hex') }))
   fs.mkdirSync(destination, { recursive: true })
   for (const { name, content } of prepared) {

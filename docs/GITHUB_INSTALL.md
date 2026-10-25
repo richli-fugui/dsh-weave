@@ -1,5 +1,7 @@
 # GitHub 来源安装
 
+2026-10-25 审查轮：main 更新为 0.1.2 源码候选，供网页审查；codex/packages 仍固定 0.1.1，本轮未发布新安装包、未安装或重启桌面。不要用 main 代替预编译安装来源。Mac 的工作台 RemoteProvider 接线尚未实现，直接安装当前包会建立本地权威，不能据此访问 Windows 同一任务库。
+
 工作台源码仍在 [main](https://github.com/richli-fugui/dsh-weave)，包名仍为 dsh-table。用户于2026-10-25授权将原 Windows desktop 的本地包依赖切为 GitHub 来源。
 
 main 是源码，未提交 lib；直接装 main 缺运行入口。为避免安装时执行构建脚本，同仓库的 [codex/packages](https://github.com/richli-fugui/dsh-weave/tree/codex/packages) 仅保存经过构建、审计的安装包文件。当前0.1.1固定提交为 c6f36711a4e1833f8b9fc11fe1175bf638dccd60，PACKAGE_PROVENANCE.json 记录源码提交3150a8d与69个运行文件SHA-256；不含真实profile、数据库、日志或凭据。
