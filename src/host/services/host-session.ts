@@ -77,6 +77,7 @@ export interface HostChatTurnResult {
   error?: string
   /** 诊断用截断栈；仅本机排障透出，公开记录需脱敏 */
   errorStack?: string
+  outcomeUnknown?: boolean
 }
 
 /** 宿主 page() 返回的事件记录的最小防御性视图 */
@@ -288,9 +289,9 @@ export class DshHostSessionBridge {
   async sendAndCollect(
     sessionId: string,
     userText: string,
-    opts: { replyTimeoutMs?: number } = {},
+    opts: { replyTimeoutMs?: number; requestId?: string; pending?: () => { title: string } | undefined } = {},
   ): Promise<HostChatTurnResult> {
-    const requestId = randomUUID()
+    const requestId = opts.requestId || randomUUID()
     let baselineMaxSeq = -1
     try {
       const before = await this.eventsOf(sessionId)
@@ -329,6 +330,7 @@ export class DshHostSessionBridge {
         status: 'error',
         error: String((err as Error)?.message ?? err),
         errorStack: String((err as Error)?.stack ?? '').slice(0, 1500),
+        outcomeUnknown: true,
       }
     }
     if (!accepted) {
@@ -343,6 +345,8 @@ export class DshHostSessionBridge {
 
     while (Date.now() < deadline) {
       await new Promise((r) => setTimeout(r, intervalMs))
+      const pending = opts.pending?.()
+      if (pending) return { path: 'host-session', sessionId, requestAccepted: true, status: 'awaiting_input', replyText: pending.title }
       let agentStatus: string | undefined
       try {
         const resolved = await this.resolveAgent(sessionId)

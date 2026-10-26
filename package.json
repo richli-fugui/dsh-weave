@@ -1,6 +1,6 @@
 {
   "name": "dsh-table",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "DSH Table 任务工作台：单主助理入口 + 多项目任务卡 + 后台调度与远程连接",
   "type": "module",
   "main": "./lib/index.js",

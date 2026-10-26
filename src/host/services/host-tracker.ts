@@ -13,6 +13,7 @@ export interface PendingHostTurn {
   stopRequested?: boolean
   lastQuestion?: string
   lastReplyText?: string
+  interaction?: { id: string; kind: 'question' | 'approval'; title: string; questions?: any[] }
 }
 
 export interface HostTrackerOptions {
@@ -52,6 +53,34 @@ export class HostSessionTracker {
 
   private markUnknown(): void {
     if (this.activePendingTurn) this.store({ ...this.activePendingTurn, status: 'unknown' })
+  }
+
+  recordTurnUncertain(requestId: string): void {
+    if (this.activePendingTurn?.requestId === requestId) this.markUnknown()
+  }
+
+  recordInteraction(interaction: NonNullable<PendingHostTurn['interaction']>): void {
+    if (!this.activePendingTurn || this.activePendingTurn.stopRequested) throw new Error('No active workbench turn')
+    this.stopBackgroundTracking()
+    this.store({ ...this.activePendingTurn, status: 'awaiting_input', lastQuestion: interaction.title, interaction })
+  }
+
+  interactionAnswered(id: string): void {
+    const turn = this.activePendingTurn
+    if (!turn || turn.interaction?.id !== id || turn.stopRequested) return
+    this.store({ ...turn, status: 'running', interaction: undefined })
+    this.startBackgroundTracking(turn.sessionId, turn.baselineMaxSeq, turn.intentId)
+  }
+
+  abandonUnknown(expectedRequestId: string, confirmed: boolean, reason: string): void {
+    const turn = this.activePendingTurn
+    if (!turn || turn.requestId !== expectedRequestId || turn.status !== 'unknown' || confirmed !== true || !reason?.trim()) {
+      throw new Error('必须明确确认原宿主已退出，并核对当前待核对轮次；未解除保护。')
+    }
+    this.stopBackgroundTracking()
+    this.domain.abandonPendingHostTurn(expectedRequestId, reason)
+    this.activePendingTurn = null
+    // Never reuse the abandoned host session for future prompts.
   }
 
   /** Reconnection reconciles existing work; it never replays a prompt or cancel command. */

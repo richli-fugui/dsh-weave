@@ -107,6 +107,10 @@
       "sha256": "3441032fa9b14a1fd432d37d6ce27624abb037c47aebcf4afd58faf1e8332bc1"
     },
     {
+      "path": "docs/adr/0003-remoteconnect-relay-and-native-requests.md",
+      "sha256": "26f96179cd67590a817fb362c8c25d10a13eb7fb6c8682d46bb22e341ee19f82"
+    },
+    {
       "path": "handoff/00-START.md",
       "sha256": "17e644c67aa712bbead96652b1c829d85adfcad394ef8dc77a576663c5f19f98"
     },
@@ -195,16 +199,20 @@
       "sha256": "3b4037935301403c679b8e1bd3e3fc21c9f6ad0212fd6d835fda40cd88612137"
     },
     {
+      "path": "handoff/rounds/20261026-feedback-github-deploy.md",
+      "sha256": "2deb4073eea4aaf5fdb225cc01bef0d430f92a37e5bac611cbb797e0b55c5f99"
+    },
+    {
       "path": "handoff/templates/ROUND.md",
       "sha256": "a1db1dc35ddb7f8bb024b13dc388bc96906f69183590b9d3bff24228a4b7ac88"
     },
     {
       "path": "package-lock.json",
-      "sha256": "b04f962f3fba8587a7f8bf7a0873727ae480d947d506ce54ec4173f5678bd19a"
+      "sha256": "479f20402e32a6700ba8a9424b27340ac1383e4c5e6c3695520ad5da3dc65c54"
     },
     {
       "path": "package.json",
-      "sha256": "a0c64640bf54db89e415361a1224fa9d7223230fbc4078edcde3f48f6f713ad2"
+      "sha256": "7a0d2cec792f1ac011e094f57780fa96b0d8e20c68db82f221eb6828bfe24688"
     },
     {
       "path": "scripts/audit-public-index.mjs",
@@ -248,7 +256,7 @@
     },
     {
       "path": "src/client.tsx",
-      "sha256": "66c0b856fd511f56ff62586a083e432c1d9f100c0a2e3c4a80494f59ce2f006d"
+      "sha256": "c9481647a1da389bd3837b4442b8edee2b527df5a721c87ed4056ef6cd1a184a"
     },
     {
       "path": "src/host/db/database.ts",
@@ -264,19 +272,23 @@
     },
     {
       "path": "src/host/services/domain.ts",
-      "sha256": "e3de743f73922fc10f0cf7ab79ca346ae0954c8d8dec7f5eb29cd9c0b19fdf28"
+      "sha256": "eb2f1c21606b2dccf94aff80d4de92f64780843795119d4039d3927141f2bd95"
     },
     {
       "path": "src/host/services/host-session.ts",
-      "sha256": "69503392b967950f4706544316798fe998cdd3962c88ce11ec1bba8c8d15466e"
+      "sha256": "89dbf06bfe1652babfa997b0eea86e9b17a882a5a6227c823209e5fe7a10d9d5"
     },
     {
       "path": "src/host/services/host-tracker.ts",
-      "sha256": "5e2dbc6fb1aad7ae76433cfba7249cc0e208cc758b1f579a15dad59e6077265a"
+      "sha256": "aac0e1e8ee4c7401f1c27321e1ed4b0b4c6cbb41bfec28305f3b5d035b70f3c1"
+    },
+    {
+      "path": "src/host/services/interactions.ts",
+      "sha256": "257563f5e5a0c2955747038753ac8b695ceca16f22bc59ab612629fd8092c519"
     },
     {
       "path": "src/host/services/scheduler.ts",
-      "sha256": "2a620e5ece7e18d2e4b0b49df00786c54e17521d2402b557a906a7df0ef59417"
+      "sha256": "da1a2b21b9825a626feb3f6ab7033fad6d176e9b63b942af19ee2c8b896ef24b"
     },
     {
       "path": "src/importers/markdown.ts",
@@ -284,7 +296,7 @@
     },
     {
       "path": "src/index.ts",
-      "sha256": "20ca24ffd27420fe306e2d497d576595dc535d012a17049ae0d60817a3afc938"
+      "sha256": "8753f944000b38f97cdb487500b401cdcd533608032b763e11fcbcb64be8f2a9"
     },
     {
       "path": "src/providers/local.ts",
@@ -293,6 +305,10 @@
     {
       "path": "src/providers/remote.ts",
       "sha256": "e97e029a8d948d939a84cd806b5a90869acb18d4c374a522fa33afec9238901d"
+    },
+    {
+      "path": "src/providers/remoteconnect-relay.ts",
+      "sha256": "19c855570fff04b005265d530c8169049021d1c076554938a057b65d61516aa5"
     },
     {
       "path": "src/providers/types.ts",
@@ -331,12 +347,16 @@
       "sha256": "fd1be86bec8c4e0b3ce7a317e8337b74b570dd5594dd7043607b77e1c0edadd6"
     },
     {
+      "path": "tests/feedback_round.test.mjs",
+      "sha256": "6b509a8f4b68bc175984ae63f103685cc6c19e3f22793da1a9fb60875c3be6a7"
+    },
+    {
       "path": "tests/host-pending-t017.test.mjs",
       "sha256": "a6739cd8fa156ab3b71069b0c2bb2639040392bdb127ae51627e9112eea107c4"
     },
     {
       "path": "tests/host_continuity.test.mjs",
-      "sha256": "b7c7246fc87e35c4fde73ff29611b065eb9602a372ad8a8385dc92d2ea3bedc6"
+      "sha256": "316bd2a390a9a92e6defa52706f0696615bcd68d2338f2c546a6089d5e298ce7"
     },
     {
       "path": "tests/host_session_bridge.test.mjs",

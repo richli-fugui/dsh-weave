@@ -62,7 +62,12 @@ test('宿主重建接收确定性回执；两分支的提交异常均不向另�
   assert.match(first.reply.text, /未转交其他模型重复执行/)
   assert.ok(prompts[0].content[0].text.includes('暂不启动或推进相关项目工作'))
   assert.equal(prompts[0].content[0].text.split('我们讨论刚才的决定').length - 1, 1)
-  liveId = undefined // 宿主旧会话丢失；新的会话仍需接回入口事实
+  const blocked = await send('刚才说了什么')
+  assert.match(blocked.reply.text, /核验/)
+  assert.equal(prompts.length, 1, 'ACK 丢失不能重新提交')
+  const response = { json() {}, status() { return this } }
+  await routes.get('POST /api/workbench/control/reconcile')({ body: { auto: true } }, response)
+  liveId = undefined // 已对账旧轮次后，宿主旧会话丢失；新会话接回入口事实
   const second = await send('刚才说了什么')
   assert.match(second.reply.text, /ACK outcome unknown/)
   assert.ok(prompts[1].content[0].text.includes('不要推进这个项目'))

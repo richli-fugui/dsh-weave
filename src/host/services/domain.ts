@@ -130,14 +130,12 @@ export class WorkbenchDomain {
 
   createTask(input: CreateTaskInput): Task {
     const id = input.id ?? randomUUID()
-    // 校验 Project 必须存在
-    this.getProject(input.projectId)
-
     const dependencies = input.dependencies ?? []
-    this.validateDependencies(id, dependencies)
 
     // 实体与 Outbox 事件同事务落库：事件写入失败时实体一并回滚，避免“有卡无事件”的投影失步
     return runTransaction(this.db, () => {
+      this.getProject(input.projectId)
+      this.validateDependencies(id, dependencies)
       const now = new Date().toISOString()
       const stmt = this.db.prepare(`
         INSERT INTO tasks (
@@ -667,6 +665,18 @@ export class WorkbenchDomain {
 
   // ================= Assistant State =================
 
+  abandonPendingHostTurn(expectedRequestId: string, reason: string): void {
+    runTransaction(this.db, () => {
+      const state = this.getAssistantState()
+      const turn = state.memoryIndex.pendingHostTurn as any
+      if (!turn || turn.requestId !== expectedRequestId || turn.status !== 'unknown') throw new ValidationError('Unknown turn changed')
+      this.db.prepare('UPDATE assistant_state SET current_session_id = ?, generation = generation + 1, memory_index_json = ?, updated_at = ? WHERE stable_id = ?')
+        .run('session-' + randomUUID(), JSON.stringify({ ...state.memoryIndex, pendingHostTurn: null }), new Date().toISOString(), state.stableId)
+      this.appendOutboxEvent(turn.sessionId, 'assistant.abandoned', { sessionId: turn.sessionId, requestId: turn.requestId, reason,
+        userConfirmed: true, terminationVerified: false })
+    })
+  }
+
   /** Pending control and any late delivery commit together; a crash cannot deliver twice. */
   savePendingHostTurn(turn: Record<string, unknown> | null, delivery?: {
     entityId: string; type: string; payload: Record<string, unknown>; text?: string; intentId?: string
@@ -868,7 +878,7 @@ export class WorkbenchDomain {
   }
 
   /** UI reads can degrade gracefully; execution must not turn corrupt prerequisites into none. */
-  private readDependenciesForExecution(taskId: string): string[] {
+  readDependenciesForExecution(taskId: string): string[] {
     const row = this.db.prepare('SELECT dependencies_json FROM tasks WHERE id = ?').get(taskId) as { dependencies_json: string } | undefined
     if (!row) throw new NotFoundError('Task', taskId)
     try {
@@ -876,6 +886,19 @@ export class WorkbenchDomain {
       if (Array.isArray(parsed) && parsed.every(id => typeof id === 'string' && id.trim().length > 0)) return parsed
     } catch { /* reject admission below */ }
     throw new WorkbenchError('任务依赖数据损坏，请明确修复依赖后再执行；未自动清空依赖。', 'CORRUPT_DEPENDENCIES')
+  }
+
+  getSchedulingDependencies(taskId: string): string[] {
+    try { return this.readDependenciesForExecution(taskId) } catch (error) {
+      if (error instanceof WorkbenchError && error.code === 'CORRUPT_DEPENDENCIES') {
+        runTransaction(this.db, () => {
+          this.db.prepare("UPDATE tasks SET status_code = 'blocked', revision = revision + 1, updated_at = ? WHERE id = ? AND status_code = 'todo'")
+            .run(new Date().toISOString(), taskId)
+          this.appendOutboxEvent(taskId, 'task.dependencies_corrupt', { taskId, code: error.code })
+        })
+      }
+      throw error
+    }
   }
 
   private validateDependencies(taskId: string, dependencies: string[]) {

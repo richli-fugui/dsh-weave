@@ -118,7 +118,7 @@ export class TaskScheduler {
       if (this.queuedItems.some(q => q.taskId === taskId)) {
         throw new WorkbenchError('Task is already queued under a different request', 'CONFLICT')
       }
-      const depsReady = task.dependencies.every(id => this.domain.getTask(id).statusCode === 'done')
+      const depsReady = this.domain.getSchedulingDependencies(task.id).every(id => this.domain.getTask(id).statusCode === 'done')
       if (!depsReady || !this.canSchedule(task)) {
         const queuedItem: QueuedItem = {
           id: randomUUID(), taskId, clientRequestId, intentId, taskTitle: task.title,
@@ -182,6 +182,7 @@ export class TaskScheduler {
    * 判断某个任务当前是否满足并发与项目互斥约束
    */
   canSchedule(task: Task): boolean {
+    try { this.domain.getSchedulingDependencies(task.id) } catch { return false }
     // Unknown workers may still be writing: their project stays protected, even in parallel mode.
     if (this.domain.hasUncertainProject(task.projectId)) return false
     if (this.activeRuns.size >= this.maxGlobalConcurrency) {
@@ -225,12 +226,12 @@ export class TaskScheduler {
           this.domain.updateQueueItemStatus(item.id, 'cancelled')
           continue
         }
-        const depsReady = task.dependencies.every(id => this.domain.getTask(id).statusCode === 'done')
+        const depsReady = this.domain.getSchedulingDependencies(task.id).every(id => this.domain.getTask(id).statusCode === 'done')
         if (task.statusCode === 'todo' && depsReady && this.canSchedule(task)) {
           this.startTaskRun(task, item.clientRequestId, item.intentId, item.id)
         } else unconsumed.push(item)
       } catch (err) {
-        if (err instanceof WorkbenchError && err.code === 'NOT_FOUND') {
+        if (err instanceof WorkbenchError && ['NOT_FOUND', 'CORRUPT_DEPENDENCIES'].includes(err.code)) {
           this.domain.updateQueueItemStatus(item.id, 'cancelled')
         } else {
           // A failed claim rolls back and remains durable/retryable, never silently lost.

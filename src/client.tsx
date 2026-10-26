@@ -108,6 +108,46 @@ export function WorkbenchView({ onClose }: { onClose?: () => void }) {
   })
   const [actionFeedback, setActionFeedback] = useState<string | null>(null)
   const [sending, setSending] = useState<boolean>(false)
+  const [connection, setConnection] = useState<any>(null)
+  const [pendingInteractions, setPendingInteractions] = useState<any[]>([])
+  const [questionAnswers, setQuestionAnswers] = useState<Record<string, string>>({})
+  useEffect(() => {
+    let active = true
+    const poll = async () => {
+      try {
+        const identity = await fetchJson('/api/workbench/connection')
+        if (active) setConnection(identity)
+        const result = await fetchJson<{ pending: any[] }>('/api/workbench/interactions')
+        if (active) setPendingInteractions(result.pending)
+      } catch { if (active) setPendingInteractions([]) }
+    }
+    void poll(); const timer = setInterval(poll, 1500)
+    return () => { active = false; clearInterval(timer) }
+  }, [])
+
+  const respondInteraction = async (item: any, action?: string) => {
+    try {
+      const answers = item.questions?.map((q: any) => {
+        const value = (questionAnswers[item.id + q.id] || '').trim()
+        const selected = q.options?.some((o: any) => o.label === value) ? [value] : []
+        return { id: q.id, selected, ...(selected.length ? {} : { custom: value }) }
+      })
+      await fetchJson('/api/workbench/interactions/respond', { method: 'POST', body: JSON.stringify({ id: item.id, sessionId: item.sessionId, turnId: item.turnId, action, answers }) })
+      setPendingInteractions(items => items.filter(p => p.id !== item.id))
+      setActionFeedback('已答复原请求，后台继续推进。')
+    } catch (error: any) { setActionFeedback(error.message) }
+  }
+
+  const abandonHost = async () => {
+    try {
+      const state = await fetchJson<{ host?: any }>('/api/workbench/control/uncertain')
+      if (state.host?.status !== 'unknown') { setActionFeedback('请先核验当前状态；未解除保护。'); return }
+      if (!window.confirm('仅在你已确认原宿主进程或会话退出时继续。解除保护不会停止仍在运行的工具，也不会撤销已有成果；误确认可能导致重复执行。')) return
+      await fetchJson('/api/workbench/control/abandon', { method: 'POST', body: JSON.stringify({ expectedRequestId: state.host.requestId, confirmed: true, reason: '用户明确确认原宿主已退出，放弃该未知轮次' }) })
+      setActionFeedback('已放弃旧轮次；没有宣称已验证停止，下次使用新会话。')
+      await loadControlSnapshot()
+    } catch (error: any) { setActionFeedback(error.message) }
+  }
 
   // 任务编辑与材料补充模态框状态
   const [editingTask, setEditingTask] = useState<Task | null>(null)
@@ -415,7 +455,7 @@ export function WorkbenchView({ onClose }: { onClose?: () => void }) {
                 fontWeight: 600,
               }}
             >
-              Windows Host 权威
+              {connection?.mode === 'client' ? connection.ready ? `Windows · ${connection.profile || '远程'} · ${String(connection.hostId || '').slice(0, 8)}` : '请先连接 Windows' : connection?.mode === 'host' ? 'Windows Host 权威' : '正在核验执行端'}
             </span>
           </div>
           {currentProject && (
@@ -546,6 +586,10 @@ export function WorkbenchView({ onClose }: { onClose?: () => void }) {
             </button>
           )}
 
+          {controlSnapshot.items.some(item => item.taskId === 'main-assistant' && item.state === 'unknown') && (
+            <button onClick={abandonHost}>确认原宿主已退出</button>
+          )}
+
           {controlSnapshot.activeCount > 0 && (
             <button
               onClick={() => handleStop({ kind: 'run', id: controlSnapshot.items[0]?.runId })}
@@ -583,6 +627,22 @@ export function WorkbenchView({ onClose }: { onClose?: () => void }) {
         </div>
       </div>
 
+      {pendingInteractions.map(item => (
+        <div key={item.id} style={{ padding: '12px 20px', background: '#fffbeb', borderBottom: '1px solid #fbbf24' }}>
+          <strong>{item.title}</strong>
+          {item.kind === 'approval' ? <span>
+            <button onClick={() => respondInteraction(item, 'approve')}>批准本次</button>
+            <button onClick={() => respondInteraction(item, 'reject')}>拒绝</button>
+          </span> : <div>
+            {item.questions.map((q: any) => <label key={q.id} style={{ display: 'block', marginTop: '8px' }}>
+              {q.question || q.header || q.id}{q.detail && <pre style={{ whiteSpace: 'pre-wrap', maxHeight: '160px', overflow: 'auto' }}>{q.detail}</pre>}
+              {q.options?.map((o: any) => <button key={o.label} onClick={() => setQuestionAnswers(values => ({ ...values, [item.id + q.id]: o.label }))}>{o.label}</button>)}
+              <input placeholder="选择上方选项，或补充回答" value={questionAnswers[item.id + q.id] || ''} onChange={e => setQuestionAnswers(values => ({ ...values, [item.id + q.id]: e.target.value }))} />
+            </label>)}
+            <button onClick={() => respondInteraction(item)}>提交这组回答</button>
+          </div>}
+        </div>
+      ))}
       {/* 主体三栏布局 */}
       <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
         {/* 左侧：项目列表 */}

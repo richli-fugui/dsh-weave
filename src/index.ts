@@ -19,7 +19,9 @@ import { TaskScheduler, type WorkerExecutionResult, type WorkerExecutor, type Wo
 import { WorkbenchContextManager } from './host/services/context.js'
 import { DshHostSessionBridge, probeHostServices } from './host/services/host-session.js'
 import { HostSessionTracker } from './host/services/host-tracker.js'
+import { WorkbenchInteractions } from './host/services/interactions.js'
 import { LocalProvider } from './providers/local.js'
+import { applyWorkbenchRelay, bindWorkbenchExtension, resolveWorkbenchMode, WORKBENCH_VERSION } from './providers/remoteconnect-relay.js'
 import type { Task } from './shared/types.js'
 
 export * from './shared/index.js'
@@ -36,6 +38,7 @@ export const name = 'workbench'
 export const inject = ['webServer', 'systemPrompt', 'tools']
 
 export interface WorkbenchConfig {
+  mode?: 'auto' | 'host' | 'client'
   dbPath?: string
   dataDir?: string
   workerExecutor?: WorkerExecutor
@@ -77,6 +80,11 @@ export function apply(ctx: Context, config: WorkbenchConfig = {}): void {
     }
   }
 
+  if (resolveWorkbenchMode(process.platform, config.mode) === 'client') {
+    applyWorkbenchRelay(ctx, optionalService)
+    return
+  }
+
   // T-001/T-004：宿主 SessionController 桥接（能力探测门控，缺席/形状不符时为 null）
   const hostSessionConfig = config.hostSession ?? {}
   const hostBridgeFor = () =>
@@ -92,6 +100,8 @@ export function apply(ctx: Context, config: WorkbenchConfig = {}): void {
   const domain = new WorkbenchDomain(db)
   const contextManager = new WorkbenchContextManager(domain)
   const hostTracker = new HostSessionTracker(domain, hostBridgeFor)
+  const interactions = new WorkbenchInteractions(ctx, hostTracker)
+  let hostDispatching = false
   // 异步重启对账（保护已有会话状态，重启无双发）
   queueMicrotask(() => {
     hostTracker.reconcileOnStartup().catch(() => {})
@@ -121,10 +131,11 @@ export function apply(ctx: Context, config: WorkbenchConfig = {}): void {
     const bridge = hostBridgeFor()
     if (!bridge) return null
     const pending = hostTracker.getPendingTurn()
-    if (pending?.stopRequested || pending?.status === 'unknown') {
-      return { path: 'host-session', sessionId: pending.sessionId, status: 'error',
+    if (hostDispatching || pending?.stopRequested || pending?.status === 'unknown' || pending?.status === 'running') {
+      return { path: 'host-session', sessionId: pending?.sessionId, status: 'error',
         error: '前一轮仍在停止或待核对，请通过控制条核验原会话；本次没有重新发送。' }
     }
+    hostDispatching = true
     let trackedRequestId: string | undefined
     try {
       const controller = optionalService('sessionController')
@@ -145,6 +156,7 @@ export function apply(ctx: Context, config: WorkbenchConfig = {}): void {
         cwd,
         model: hostSessionConfig.model,
       })
+      if (!session.verified) throw new Error('宿主会话未通过核验，未提交输入。')
       // 真实绑定：新建或 DB 未记录时轮换并经宿主验证（sessionMode=dsh-session-controller）
       if (session.created && session.verified && state.currentSessionId !== session.sessionId) {
         await contextManager.rotateSession('main-assistant', session.sessionId, async (id: string) => {
@@ -181,6 +193,7 @@ export function apply(ctx: Context, config: WorkbenchConfig = {}): void {
       const turn = await bridge.sendAndCollect(
         session.sessionId,
         contextManager.buildHostTurnInput(userText, focusProjectId, previousHistory),
+        { requestId: trackedRequestId, pending: () => interactions.pending()[0] },
       )
 
       if (turn.status === 'replied') {
@@ -189,6 +202,8 @@ export function apply(ctx: Context, config: WorkbenchConfig = {}): void {
         await hostTracker.recordTurnAwaitingInput(turn.replyText || '宿主助理等待你的输入或确认。', undefined, trackedRequestId)
       } else if (turn.status === 'accepted_no_reply_yet' || turn.status === 'timeout') {
         hostTracker.startBackgroundTracking(session.sessionId, baselineMaxSeq, intentId)
+      } else if (turn.outcomeUnknown) {
+        hostTracker.recordTurnUncertain(trackedRequestId)
       } else {
         hostTracker.recordTurnCompleted(undefined, trackedRequestId)
       }
@@ -201,6 +216,8 @@ export function apply(ctx: Context, config: WorkbenchConfig = {}): void {
         status: 'error',
         error: `宿主会话轮次失败: ${err?.message ?? String(err)}`,
       }
+    } finally {
+      hostDispatching = false
     }
   }
 
@@ -414,6 +431,26 @@ export function apply(ctx: Context, config: WorkbenchConfig = {}): void {
       }
     }
 
+    registerRoute('GET', '/api/workbench/interactions', (_req: any, res: any) => res.json({ pending: interactions.pending() }))
+    registerRoute('POST', '/api/workbench/interactions/respond', (req: any, res: any) => {
+      try { interactions.respond(req.body); res.json({ accepted: true }) }
+      catch (error: any) { res.status(409).json({ error: error.message }) }
+    })
+
+    registerRoute('GET', '/api/workbench/connection', async (_req: any, res: any) => {
+      const raw = optionalService('remoteconnect')
+      const remote = raw?.[Symbol.for('cordis.original')] ?? raw
+      const status = typeof remote?.status === 'function' ? await remote.status() : {}
+      res.json({ mode: 'host', ready: true, hostId: status.hostId || null, profile: status.profile || 'local', workbenchVersion: WORKBENCH_VERSION })
+    })
+
+    registerRoute('POST', '/api/workbench/control/abandon', (req: any, res: any) => {
+      try {
+        hostTracker.abandonUnknown(req.body?.expectedRequestId, req.body?.confirmed, req.body?.reason)
+        res.json({ abandoned: true, terminationVerified: false })
+      } catch (error: any) { res.status(409).json({ error: error.message }) }
+    })
+
     registerRoute('GET', '/api/workbench/projects', async (_req: any, res: any) => {
       res.json(await provider.listProjects())
     })
@@ -568,7 +605,7 @@ export function apply(ctx: Context, config: WorkbenchConfig = {}): void {
     })
 
     registerRoute('GET', '/api/workbench/control/uncertain', async (_req: any, res: any) => {
-      res.json(await provider.listUncertain())
+      res.json({ ...await provider.listUncertain(), host: hostTracker.getPendingTurn() })
     })
 
     registerRoute('POST', '/api/workbench/control/reconcile', async (req: any, res: any) => {
@@ -708,30 +745,10 @@ export function apply(ctx: Context, config: WorkbenchConfig = {}): void {
         // 若宿主正在等待输入（awaiting_input），用户的输入直接作为对提问的作答路由回原会话
         const pendingTurn = hostTracker.getPendingTurn()
         if (pendingTurn && pendingTurn.status === 'awaiting_input') {
-          const hostTurn = await hostAssistantTurn(userText, projectId, previousHistory, pendingTurn.intentId)
-          let replyText = ''
-          if (hostTurn && (hostTurn.status === 'replied' || hostTurn.status === 'awaiting_input')) {
-            replyText = hostTurn.replyText || ''
-          } else if (hostTurn?.status === 'accepted_no_reply_yet') {
-            replyText = `已提交答复至宿主会话（会话 ${hostTurn.sessionId?.slice(0, 24)}…），后台推进中。完成后结果将直接呈现在此。`
-          } else {
-            const hostStatusText =
-              hostTurn?.status === 'timeout'
-                ? '等待超时'
-                : hostTurn?.status === 'stopped'
-                  ? '已停止'
-                  : hostTurn?.status === 'error'
-                    ? '处理异常'
-                    : hostTurn?.status || '已收到'
-            replyText = hostTurn ? `答复已提交（宿主状态：${hostStatusText}）。` : '已收到答复。'
-          }
-          const asstMsg = await provider.saveChatMessage('assistant', replyText, pendingTurn.intentId)
-          return res.json({
-            reply: asstMsg,
-            hostSession: hostTurn
-              ? { sessionId: hostTurn.sessionId, status: hostTurn.status, created: hostTurn.sessionCreated, error: hostTurn.error }
-              : undefined,
-          })
+          if (!interactions.pending().length) throw new Error('原请求目前不能从工作台作答，请先核验；没有追加普通 Prompt。')
+          interactions.respondText(userText)
+          const answerReceipt = await provider.saveChatMessage('assistant', '已答复原请求，后台继续推进；结果将在这里更新。', pendingTurn.intentId)
+          return res.json({ reply: answerReceipt, interactionAccepted: true })
         }
 
         // 4. 检查方案讨论意图（“先讨论怎么推进A”、“方案是什么”）-> 引导沟通，不擅自批量开工
@@ -989,6 +1006,7 @@ export function apply(ctx: Context, config: WorkbenchConfig = {}): void {
 
     // 全部路由收集完毕：真实宿主按 path 合并注册 exact 路由，测试桩逐个登记
     flushRoutes()
+    bindWorkbenchExtension(ctx, collectedRoutes, optionalService)
   }
 
   // 2. 注入 System Prompt 指引（动态接入有界上下文）
