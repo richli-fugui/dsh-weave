@@ -24,7 +24,7 @@
     },
     {
       "path": "README.md",
-      "sha256": "f4d87c459e4a718bd106af231bf3d945f1a883b8e5922397f904e431b7690601"
+      "sha256": "129cc647e61b1b0f90d05b99267e30b864cf2d640a81d1fc89fe9937c1a8bc6f"
     },
     {
       "path": "THIRD_PARTY_NOTICES.md",
@@ -36,7 +36,7 @@
     },
     {
       "path": "docs/ACCEPTANCE.md",
-      "sha256": "d4b2a99bf4388bd81dadd741d39aeff8f615e69810aa93c9bb46d170cbdbe394"
+      "sha256": "cf357de68ce44bd6d87af0bfb22758d214db2e57c0f52c560bcbb39d66086954"
     },
     {
       "path": "docs/ARCHITECTURE.md",
@@ -52,7 +52,7 @@
     },
     {
       "path": "docs/DEPLOYMENT.md",
-      "sha256": "ce2f8955f7af06c817725635107fb1b2383ee8f2d918b984556669d9f0ca6097"
+      "sha256": "20303fd2dd5a9ce4378f06c1b7ce6d9692760ffa0bf316a0698fa0a29e64e4f4"
     },
     {
       "path": "docs/FIELD_MAPPING.md",
@@ -60,7 +60,7 @@
     },
     {
       "path": "docs/GITHUB_INSTALL.md",
-      "sha256": "c86df68d57dc736a1c8ab3ece602c15403704b22a5723387954852f5deddf1f6"
+      "sha256": "50c845ad0bebc19d000f1d81599dbe45a4a78d610d34062eb91958b2a6d1f967"
     },
     {
       "path": "docs/HANDOFF.md",
@@ -80,7 +80,7 @@
     },
     {
       "path": "docs/REVIEW_GUIDE.md",
-      "sha256": "d28de7408599428aa7ed54c3037ecbd838b180c21f89147a2ae7fe8a00a20194"
+      "sha256": "4c945704dcdbfe07648c88123e22e7f3e1201dd828f9f1d459e20db27c41fe79"
     },
     {
       "path": "docs/SOURCES.md",
@@ -88,7 +88,7 @@
     },
     {
       "path": "docs/STATUS.md",
-      "sha256": "b6f627bdb5975f92c64faf211de13399d38aa9a7261dc9a6cdbb8510302c63ea"
+      "sha256": "06a259c9acf67ad8281f173e77f292d8463d663ae03b7d49e5ea51e7fccc07d7"
     },
     {
       "path": "docs/VALIDATION_HANDOFF.md",
@@ -124,11 +124,11 @@
     },
     {
       "path": "handoff/03-STATE.md",
-      "sha256": "500bd7f5e7d6961ceadc7c7bc2daab5c80548f4c12410bb0e4282bcf0ded6fb7"
+      "sha256": "c876bffda687d97b79ff6e94f591e91357572ae9e626ee55f4551d8f1ea250ca"
     },
     {
       "path": "handoff/04-LOG.md",
-      "sha256": "4475d5596a910c5f6ead93632e1e6770db1bf207689e83478f446868ff17bb41"
+      "sha256": "a8e4461652306c75506941d95e0573b63fad685a19c743791a812750e2ba8931"
     },
     {
       "path": "handoff/CONTINUE_PROMPT.md",
@@ -200,7 +200,7 @@
     },
     {
       "path": "handoff/rounds/20261026-feedback-github-deploy.md",
-      "sha256": "2deb4073eea4aaf5fdb225cc01bef0d430f92a37e5bac611cbb797e0b55c5f99"
+      "sha256": "2a76335763e2ac5438294a7d3d0285151676e1d59a22250cd261137aad44cd42"
     },
     {
       "path": "handoff/templates/ROUND.md",

@@ -44,3 +44,15 @@ T-002 独立项目根 Worker 仍未接入；默认无执行器会 blocked。真�
 ## 7. 自查
 
 独立审核有反证；保留他人改动；不改他项目；用 GitHub 固定预构建包，不装本机包；真实层按实际结果分开；收尾更新 STATE/LOG/验收、补记结果并只释放自有租约。
+
+
+## 收尾补记：真实安装与用户分工
+
+- 实际根目录：<LOCAL_PATH>
+- 隔离官方 rc.3：正规 CLI 从上述 GitHub SHA 安装；77 hash 一致、实际 Host 路由/隔离根 PASS；真实 Remote Connect 0.1.19 认证后经工作台扩展读同一项目 IDs PASS；真实 userQuestions.ask 被候选适配器结算 PASS（用辅助 tracker，不冒充完整产品主入口模型测试）。
+- helper 的 Host 验证报告写完后清理未自行退出，只定向停止了本轮已完成的隔离 helper PID，未触及生产 DSH；不把该 helper 的退出生命周期标 PASS。MODEL、真实 Mac 及当前候选原桌面 Client 本轮 NOT_RUN。
+- Windows 原 desktop 安装：正规随包 CLI plugin --profile desktop add github 固定源成功；77 hash、项目/卡/绑定和 DB quick_check 通过。原配置 patch/workspace 仅被 pnpm 重写换行，核对语义相同后恢复原字节。消息数仍 116，没有在线模型测试或创建真实业务任务。
+- CLI 重新解析已存在的依赖声明，使 Remote Connect 的实际文件 0.1.18 对齐到 manifest 原已声明的 0.1.19，9 个文件 hash 变化；旧旁路 bak 由 pnpm 移到 .ignored，未手工删。订阅插件仍 3.1.3，未更改；其他依赖声明保持。
+- 宿主文件当前 rc.3，现有订阅插件 3.1.3 被兼容门禁拦截；查到 3.1.7 peer 范围包含 rc.3、Cordis 4.0.5 和 pi-ai 1.1.0。已询问更新范围，用户明确“你不用管这个插件，我去找其他的Agent升级”。因此本轮不升级、不授权豁免、不关闭当前进程；共享部署租约已释放。当前进程的 /connection 尚未加载新代码，准确状态是 installed PASS、loaded NOT_RUN。
+- 选择性回滚包、锁/配置、SQLite 备份只在私有目录；不恢复旧整份 profile。公有文档更新 Mac GitHub 安装步骤及限定状态。原源代码不 reset，不修改 remoteconnect 项目源码。
+- 第一条后续动作：待用户指定 Agent 完成兼容升级后重新识别实例/活跃任务/取得租约，再正常重启；动态端口 GET /api/workbench/connection 应显示 0.1.3。核对原卡/绑定和新 Client，真实 Mac 再验同 ID、断线、提问和停止。无须本次聊天也可继续。

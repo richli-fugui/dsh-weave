@@ -1,5 +1,13 @@
 # 工作台部署、数据迁移与回滚
 
+## 2026-10-26：0.1.3 GitHub 安装，待外部兼容问题解除后重载
+
+Windows 原 desktop 已使用随包 CLI 安装 github:richli-fugui/dsh-weave#aaa00784b6722fe8bc436d4d51e6bac5771f8cb8，77 文件匹配。官方应用安装文件当前为 rc.3。原 Codex 订阅插件 3.1.3 被宿主兼容门禁拦截；已查到 3.1.7 声明支持，用户明确交其他 Agent 处理，本项目不升级、不放宽版本门禁、不重启原实例。共享部署租约已释放。对方完成后正常重启即可加载已安装工作台，无需重装或改回本地来源。
+
+备份包括精确旧包、一致 SQLite、配置/锁/workspace；路径只在 .runtime/deploy-20261026/backup.json。原项目/23 卡/29 Runs/26 Results/116 消息/1 绑定完整。正式 CLI 重新解析依赖时，将原已声明 v0.1.19、但实际文件仍 0.1.18 的 Remote Connect 对齐为 0.1.19；配置声明保持，9 个旧文件 hash 有变化，不声称其他插件字节全未变。旧旁路 bak 被 pnpm 移入 .ignored，未手工删除。配置 patch/workspace 仅换行重写，核对语义相同后恢复原字节。订阅插件仍 3.1.3，未改。
+
+隔离固定 GitHub 安装、rc.3 Host 和同机已认证 Remote Connect 扩展调用通过；原桌面新 Client 与真实 Mac 本轮未验。不恢复整份旧 profile，不用旧 DB 覆盖新消息。若需回退，仅用私有备份的 previous-install.tgz（这是恢复用途；正常安装来源仍为 GitHub），并单独核对其他 Agent 的后续改动。
+
 下文早期章节为目标流程。已有安装工具、tarball 和 GitHub 0.1.1 安装证据；实际完成范围及现行规则见本文件后续日期节和 handoff/03-STATE.md，不能从旧说明推断尚未施工。
 
 ## 1. 识别与打包

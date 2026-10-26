@@ -1,40 +1,41 @@
 # 当前状态：dsh-table
 
-更新时间：2026-10-25（Asia/Shanghai）。最新轮次：[20261025-194927-review-publish](rounds/20261025-194927-review-publish.md)。网页审查入口：[REVIEW_GUIDE](../docs/REVIEW_GUIDE.md)。
+更新：2026-10-26（Asia/Shanghai）。最新轮次：[20261026-feedback-github-deploy](rounds/20261026-feedback-github-deploy.md)。
 
-阶段：**0.1.2 源码审查候选**。用户授权独立审核、改进、脱敏 commit/push 到 GitHub main，供网页审查；实现提交 34ac1a37b4d1e58a3a575dd4974f5ad695a14ba9 已推送并从 GitHub 回读核实。不发布 npm、不改安装分支、不重装/重启桌面。
+**0.1.3 已从 GitHub 安装到 Windows 原 desktop，尚未重载。** 原 DSH 安装文件已是 0.2.1-rc.3，而现有 Codex 订阅插件 3.1.3 被兼容门禁拦截；用户明确交其他 Agent 升级它，本项目不动该插件、不授予版本豁免、不重启当前仍可用的进程。共享部署租约已释放，待对方完成后正常退出重开即可加载工作台，无需重装。
 
-## 当前事实
+## 版本与保留
 
-- 原始工作区 Git 无提交，保留他人未提交改动；公开 Git 历史在 .public-export。本轮前 main 为 cab82da9082146a41e385dfb64b873eb909ff7e8；安装分支为 c6f36711a4e1833f8b9fc11fe1175bf638dccd60，两者不能混称。
-- 前几轮加固、T-017 跟踪骨架和用户指定的 WorkBuddy 文本桥接移除保留。0.1.2 源码与 package-lock 身份现一致；主助理仅宿主会话，默认 Worker 缺宿主执行器时阻塞。
-- 本轮修复：项目创建事务遗漏；宿主失联/查询异常/观察截止误报停止并遗失控制；停止 ACK 与终态混淆；停止聚合丢 conflict；旧回调在停止/卸载后继续写；晚到回复与 pending 清除崩溃窗口；损坏依赖误放行；删除源码后 lib 残留进入包。
-- npm test 现自动清理并重建生成目录；公开导出可安全删除上次清单中未编辑的过时文件，仍拒绝未知/编辑文件。
-- Windows desktop 本轮只读安装元数据：dsh-table 仍为上述 GitHub 固定 0.1.1；Remote Connect 依赖已为 v0.1.19，未改动。当前运行版本/活跃任务未重新实测，不从安装元数据推断已加载。
-- Mac 不是仅缺实机：Client 硬编码本机 /api/workbench，Host 无 Mac 禁止建库模式，RemoteProvider 尚未装入产品。当前不能让用户直接安装来访问 Windows 同一工作台。
+- 源码实现提交：c1b90e0bbdd05e1bbbbc680884d334203442da91；本轮后续文档提交不改已验证代码。
+- 固定安装源：github:richli-fugui/dsh-weave#aaa00784b6722fe8bc436d4d51e6bac5771f8cb8，包名 dsh-table 0.1.3，77 文件全部匹配；不是 file/link 或本机源码安装。
+- 原 1 项目、23 卡、29 Runs、26 Results、116 消息、1 助理绑定均保留；配置 patch/workspace 原字节保留。精确旧包/配置/锁/一致 SQLite 备份在私有 .runtime/deploy-20261026/backup.json 所指目录，未演练生产回滚。
+- 正规 CLI 将原已声明 v0.1.19、但实际文件仍 0.1.18 的 Remote Connect 对齐到 0.1.19；声明未变，9 个文件 hash 改变，不能说其他插件字节全部未变。订阅插件仍为 3.1.3。
+- 原始工作区无 Git 提交；公开历史在 .public-export；私有证据/数据库/截图/记忆未上传。保留他人未提交改动。
 
-## 验证边界
+## 本轮实现与审核
 
-| 层 | 本轮结果 |
+- 外部建议中的 busy_timeout 缺失不成立；最终 admitRun 原已严格拒绝坏依赖，故“直接绕过执行”不成立，但早期调度宽松成立。
+- 建卡校验移入事务；调度及队列提前严格校验坏依赖并标 blocked。
+- Host unknown 增加显式放弃：准确轮次、用户确认、原因，原子审计/清 pending/换绑定，terminationVerified=false；Worker 原有手工对账保留，不按时间自动解除保护。
+- 按 rc.3 公开 user-questions/request、approval/request 结算原问题/批准/拒绝；不发送普通 prompt 冒充作答。主回合请求 ID 与宿主 prompt 一致，过时请求/重复应答拒绝；ACK 异常保留 unknown，并发主输入不覆盖当前回合。
+- Mac 默认只转送 Remote Connect 公共扩展，不建本地 SQLite、不播种、不注册 Worker 工具；离线/换代不回退、不自动重发写请求。界面显示执行端身份。原 RemoteProvider 是逻辑测试实现，产品实际通路见 ADR 0003。
+
+## 分层证据
+
+| 层 | 本轮实际结果 |
 | --- | --- |
-| STATIC | typecheck、干净构建 PASS；打包 dry-run 69 文件、Host/Client 入口齐全、残留桥接 0 |
-| UNIT/MOCK | 基线重建后 116 PASS；本轮最终 131 PASS，0 FAIL，0 SKIP；7 个先写负例修改前全 FAIL，修复后通过 |
-| 公开副本 | 独立脱敏副本离线安装、typecheck、131 项回归全通过；101 文本文件索引/清单一致；GitHub 固定提交审查页已回读。原始 evidence/数据库/截图/记忆不上传 |
-| MODEL / HOST / DESKTOP / REMOTE / MANUAL | 本轮全部 NOT_RUN；历史证据只属于其当时版本，不自动覆盖 0.1.2 |
+| STATIC | typecheck、干净 Host/Client 构建、77 文件打包/隐私审计通过 |
+| UNIT/MOCK | 137 PASS，0 FAIL，0 SKIP |
+| GITHUB_INSTALL | 隔离与原 desktop 均使用同一固定 GitHub 包，77 文件一致；原配置和数据保留 |
+| HOST | 隔离官方 rc.3 启动，工作台路由与隔离根通过 |
+| 协议（同机真实） | 真实 Remote Connect 0.1.19 认证连接，通过工作台扩展读出同一组项目 ID |
+| 原生服务（限定） | 真实 userQuestions.ask + 候选适配器/隔离辅助 tracker 结算原 waterfall，无 prompt/模型；不等于完整主聊天/LLM端到端 |
+| MODEL / 原桌面新 Client / 真实 Mac | NOT_RUN；原进程未重启，新 connection 端点尚未加载，不假称完成 |
 
-## 开放问题
+## 下一位第一条动作
 
-| 优先级 | ID | 事实与下一步 |
-| --- | --- | --- |
-| 高 | T-002 | 默认 Worker 仍只探测可选 agentRunner.executeTask；按真实公开类型接独立项目根 Session、工具与权限，验证真实代码及办公任务 |
-| 高 | T-017 | 原生问题/审批尚缺正式 interaction 响应契约与实证；旧 2/5 测试 tracker 与 apply 分离，现已更名纠正。不能以 followup prompt 当作已回答原生交互 |
-| 高 | T-007 | RemoteProvider 单独 mock 通过，产品 Mac 接线与禁止本地权威门禁缺失；先核对 Remote Connect v0.1.19 公开扩展能力，再接 UI/Host |
-| 中 | 主入口并发/受理 | tracker ID 与宿主实际 requestId 未统一；ACK 丢失、并发输入、前台回复持久化窗口仍需专项。停止观察修复不等于所有派发幂等已完成 |
-| 中 | 0.1.2 部署 | 用户当前要源码供审查，未更新安装分支。试装前按部署租约、备份、隔离包/宿主/Client验证，再串行升级，不直接装 main |
-| 低 | rc.3/T-016 | rc.3 未实测；历史验证卡/消息未清理。保留原数据，不擅自删除 |
+用户指定的其他 Agent 完成订阅插件兼容升级后，先重新核对/取得共享部署租约和活跃任务，正常退出重开 DSH。动态发现端口，读取 /api/workbench/connection 应为 workbenchVersion=0.1.3，再核对原生任务台、原卡/绑定及真实问题/审批从主入口解除。不可重复覆盖其他 Agent 的依赖或改回本地来源。
 
-## 下一位第一条可执行动作
+Mac 安装可按 docs/GITHUB_INSTALL.md 使用同一固定来源；先确保 Windows 已加载 0.1.3、Mac Remote Connect 0.1.19 已连接。真实 Mac 的相同 IDs、断线重连及停止/提问仍需实机证据。
 
-先运行 npm run typecheck、npm test 确认当前 131/131 基线（测试会自行重建），再读取 docs/REVIEW_GUIDE.md，按外部反馈定位真实源码和触发条件。若继续施工，优先对照目标 DSH 公开 Session/interaction 类型，列出问题/审批请求 ID、回答方法、取消与生命周期实际契约；必须取得真实待决交互从同一主入口作答后解除的证据，不能沿用旧 2/5 测试结论。
-
-后续选择 T-002/T-007 时，取得真实项目根/权限或真实公开远程扩展调用证据；缺设备只阻塞实机层，不把未实现部分写成缺硬件。当前无需用户做安装操作。
+开放：T-002 独立项目根 Worker（缺执行器仍 blocked）；原生 continued-question 跨重启恢复；长回合超过 Remote Connect 15 秒的持久受理回执/命令对账；真实原桌面/跨设备完整验收。不得把模拟文件或测试数量当业务完成。

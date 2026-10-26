@@ -1,5 +1,17 @@
 # GitHub 来源安装
 
+## 0.1.3：Windows 与 Mac（2026-10-26）
+
+固定预编译来源：`github:richli-fugui/dsh-weave#aaa00784b6722fe8bc436d4d51e6bac5771f8cb8`。包名 dsh-table，版本 0.1.3，77 个运行文件，源码提交 c1b90e0。不要直接安装 main；本来源包含编译好的 Host/Client，不需要本机源码路径。
+
+Mac DSH：在“插件 → 添加插件”选择“自定义地址”，粘贴上述完整来源并安装；安装完成后正常退出并重开 DSH，再从侧栏“任务台”进入。Mac 默认只作客户端，不建本地业务库，不需要改数据目录或 JSON 配置。先在 Remote Connect 0.1.19 连接 Windows；工作台顶部应显示 Windows 身份，项目和卡片应与 Windows 相同。未连接时明确显示连接缺口，不会本地开工。真实 Mac 尚未验收，若显示连接/版本错误，不要重复发同一工作，先核对 Windows 已加载 0.1.3。
+
+Mac 继续使用自己的 DSH 模型或聊天，不会改变 Windows 工作台的数据权威。后台执行能力由 Windows 宿主提供；当前默认 Worker 的独立项目根 Session 仍待 T-002 接入，缺执行器时如实 blocked，安装不等于所有办公自动执行已完成。
+
+本轮隔离 GitHub 安装与 rc.3 Host、真实同机 Remote Connect 扩展通路、原生 userQuestions 公共服务兼容验证已通过。Windows 原实例安装/重载的最后结果见最新 STATE；不以装包成功推断已加载。
+
+## 0.1.1 历史安装记录
+
 2026-10-25 审查轮：main 更新为 0.1.2 源码候选，供网页审查；codex/packages 仍固定 0.1.1，本轮未发布新安装包、未安装或重启桌面。不要用 main 代替预编译安装来源。Mac 的工作台 RemoteProvider 接线尚未实现，直接安装当前包会建立本地权威，不能据此访问 Windows 同一任务库。
 
 工作台源码仍在 [main](https://github.com/richli-fugui/dsh-weave)，包名仍为 dsh-table。用户于2026-10-25授权将原 Windows desktop 的本地包依赖切为 GitHub 来源。

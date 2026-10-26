@@ -1,7 +1,7 @@
 # DSH Table（工作台，暂名）
 
-> 当前部署：Windows 官方 DSH 0.2.1-rc.2 的日常 desktop 已从 GitHub 固定来源安装并重开加载 dsh-table 0.1.1，原生任务台基本界面通过。完整办公执行、主入口权限交互及真实 Mac 跨设备仍有余项。
-> 源码候选：0.1.2（2026-10-25），已移除 WorkBuddy 文本桥接；本轮只做源码改进和 GitHub 同步，未更新桌面安装。网页审查请先读 [本轮审查入口](docs/REVIEW_GUIDE.md)。
+> 2026-10-26：0.1.3 已发布固定 GitHub 预编译包；Windows 安装与真实加载分别记录在 [当前交接](handoff/03-STATE.md)。新增原生问题/审批请求应答和 Mac 经 Remote Connect 访问 Windows 的通路，真实 Mac 仍待验。
+> [Windows/Mac GitHub 安装说明](docs/GITHUB_INSTALL.md)；[设计取舍与公开接口](docs/adr/0003-remoteconnect-relay-and-native-requests.md)。
 
 ## 产品目标
 
@@ -57,7 +57,7 @@ Contexera等项目作为上下文和长期助理机制的参考，不默认同�
 
 ## 当前能安装吗
 
-源码可构建为 tarball。Windows 0.1.1 有历史宿主、模型及桌面证据；0.1.2 本轮仅通过静态和隔离回归。Worker 已移除文本桥接，缺少宿主执行器时明确阻塞；独立项目根 Worker 尚待接入。原生审批/提问主入口答复仍缺契约与实机证据。Mac UI 尚未接 RemoteProvider，直接安装会创建另一份本地库，目前不能用于访问 Windows 同一工作台。详见 [当前交接](handoff/03-STATE.md)。
+可从 GitHub 固定预编译版本安装，见上方说明。0.1.3 已有隔离 rc.3 宿主、同机真实 Remote Connect 扩展通路及原生提问服务兼容证据；尚不等于真实 Mac 或完整模型/办公端到端验收。Mac 只转送 Windows 请求，不再本地建库。Worker 已移除文本桥接，缺少宿主执行器时明确阻塞；独立项目根 Worker 仍待接入。详见 [当前交接](handoff/03-STATE.md)。
 
 开发验证（Node 24；Node 最低版本按 package.json）：
 
