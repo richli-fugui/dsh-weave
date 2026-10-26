@@ -13,7 +13,9 @@ export interface WorkerExecutionResult {
     suggestedTaskStatus?: 'todo' | 'in_progress' | 'blocked' | 'review' | 'done';
     outcome?: Record<string, unknown>;
 }
-export type WorkerExecutor = (task: Task, projectRoot: string, signal: AbortSignal) => Promise<WorkerExecutionResult>;
+export type WorkerExecutor = (task: Task, projectRoot: string, signal: AbortSignal, context?: {
+    runId: string;
+}) => Promise<WorkerExecutionResult>;
 export interface WorkerReconciliationResult {
     state: 'running' | 'completed' | 'exited' | 'not_found';
     summary?: string;

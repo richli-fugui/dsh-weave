@@ -20,6 +20,7 @@ export declare class WorkbenchDomain {
         created: boolean;
     };
     getRun(id: string): Run;
+    attachWorkerSession(runId: string, workerSessionId: string): void;
     listRuns(taskId?: string): Run[];
     listRunningRuns(): Run[];
     reconcileCrashedRunsOnStartup(): {
@@ -78,6 +79,15 @@ export declare class WorkbenchDomain {
     getResult(id: string): Result;
     appendOutboxEvent(entityId: string, type: string, payload: Record<string, unknown>): OutboxEvent;
     listOutboxEvents(afterSequence?: number, limit?: number): OutboxEvent[];
+    abandonPendingHostTurn(expectedRequestId: string, reason: string): void;
+    /** Pending control and any late delivery commit together; a crash cannot deliver twice. */
+    savePendingHostTurn(turn: Record<string, unknown> | null, delivery?: {
+        entityId: string;
+        type: string;
+        payload: Record<string, unknown>;
+        text?: string;
+        intentId?: string;
+    }): void;
     getAssistantState(stableId?: string): {
         stableId: any;
         currentSessionId: any;
@@ -107,6 +117,9 @@ export declare class WorkbenchDomain {
      */
     listChatMessages(limit?: number): ChatMessage[];
     private mapRunRow;
+    /** UI reads can degrade gracefully; execution must not turn corrupt prerequisites into none. */
+    readDependenciesForExecution(taskId: string): string[];
+    getSchedulingDependencies(taskId: string): string[];
     private validateDependencies;
     enqueueTask(item: {
         id: string;

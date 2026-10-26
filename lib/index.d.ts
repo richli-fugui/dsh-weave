@@ -13,19 +13,17 @@ export * from './shared/index.js';
 export * from './host/services/domain.js';
 export * from './host/services/scheduler.js';
 export * from './host/services/context.js';
-export * from './host/services/ai-client.js';
 export * from './host/services/host-session.js';
+export * from './host/services/host-tracker.js';
 export * from './providers/types.js';
 export * from './providers/local.js';
 export * from './providers/remote.js';
 export declare const name = "workbench";
 export declare const inject: string[];
 export interface WorkbenchConfig {
+    mode?: 'auto' | 'host' | 'client';
     dbPath?: string;
     dataDir?: string;
-    aiBaseURL?: string;
-    aiApiKey?: string;
-    aiModel?: string;
     workerExecutor?: WorkerExecutor;
     workerReconciler?: WorkerReconciler;
     /** 宿主会话桥接（sessionController）选项；全部可选，能力探测失败自动降级既有路径 */

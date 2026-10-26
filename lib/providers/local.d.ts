@@ -1,13 +1,15 @@
 import type { WorkbenchDomain } from '../host/services/domain.js';
 import type { TaskScheduler } from '../host/services/scheduler.js';
 import type { WorkbenchContextManager } from '../host/services/context.js';
+import type { HostSessionTracker } from '../host/services/host-tracker.js';
 import type { AssistantState, ChatMessage, CompleteRunInput, ControlSnapshot, CreateProjectInput, CreateTaskInput, OutboxEvent, Project, Result, Run, StartRunInput, StopResult, Task, UpdateProjectInput, UpdateTaskInput, WorkIntent } from '../shared/types.js';
 import type { WorkbenchProvider } from './types.js';
 export declare class LocalProvider implements WorkbenchProvider {
     private readonly domain;
     private readonly scheduler?;
     private readonly contextManager?;
-    constructor(domain: WorkbenchDomain, scheduler?: TaskScheduler | undefined, contextManager?: WorkbenchContextManager | undefined);
+    private readonly hostTracker?;
+    constructor(domain: WorkbenchDomain, scheduler?: TaskScheduler | undefined, contextManager?: WorkbenchContextManager | undefined, hostTracker?: HostSessionTracker | undefined);
     createWorkIntent(rawInput: string, projectId?: string): Promise<WorkIntent>;
     getControlSnapshot(): Promise<ControlSnapshot>;
     stopRun(runId: string): Promise<StopResult>;
